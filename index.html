@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Absensi Siswa</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .card { max-width: 520px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    label { display:block; margin-top: 12px; font-weight:600; }
+    input, select, textarea { width: 100%; padding: 10px; border:1px solid #d1d5db; border-radius: 8px; }
+    button { margin-top:16px; background:#2563eb; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .muted { color:#6b7280; font-size: 12px; }
+    .ok { color: #14532d; background:#dcfce7; padding:8px 10px; border-radius:8px; margin-top:10px; }
+    .err{ color: #7f1d1d; background:#fee2e2; padding:8px 10px; border-radius:8px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Form Absensi</h1>
+    <div class="muted">Tanggal: <?= tanggalHariIni ?></div>
+
+    <label>NIS</label>
+    <input id="nis" type="text" placeholder="mis. 70101" required />
+
+    <label>Nama</label>
+    <input id="nama" type="text" placeholder="Nama lengkap" required />
+
+    <label>Kelas</label>
+    <input id="kelas" type="text" placeholder="mis. 7A" required />
+
+    <label>Status</label>
+    <select id="status">
+      <option>Hadir</option>
+      <option>Terlambat</option>
+      <option>Izin</option>
+      <option>Sakit</option>
+      <option>Alpa</option>
+    </select>
+
+    <label>Keterangan (opsional)</label>
+    <textarea id="ket" rows="2" placeholder="Mis. surat izin, alasan, dsb."></textarea>
+
+    <button onclick="kirim()">Kirim Absensi</button>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    function kirim() {
+      const body = {
+        nis: document.getElementById('nis').value.trim(),
+        nama: document.getElementById('nama').value.trim(),
+        kelas: document.getElementById('kelas').value.trim(),
+        status: document.getElementById('status').value.trim(),
+        keterangan: document.getElementById('ket').value.trim()
+      };
+      const msg = document.getElementById('msg');
+      msg.innerHTML = '';
+
+      google.script.run.withSuccessHandler(res => {
+        msg.innerHTML = `<div class="${res.ok ? 'ok':'err'}">${res.message}</div>`;
+        if (res.ok) {
+          document.getElementById('nis').value='';
+          document.getElementById('nama').value='';
+          document.getElementById('kelas').value='';
+          document.getElementById('status').value='Hadir';
+          document.getElementById('ket').value='';
+        }
+      }).withFailureHandler(err => {
+        msg.innerHTML = `<div class="err">Gagal mengirim: ${err.message || err}</div>`;
+      }).submitAbsensi(body);
+    }
+  </script>
+</body>
+</html>
