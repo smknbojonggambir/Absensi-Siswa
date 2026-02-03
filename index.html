@@ -7,22 +7,105 @@
   <style>
     /* CSS RESPONSIF & MODERN */
     :root { --primary: #2563eb; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); display: flex; justify-content: center; min-height: 90vh; }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: var(--bg); 
+      margin: 0; 
+      padding: 20px; 
+      color: var(--text); 
+      display: flex; 
+      justify-content: center; 
+      min-height: 90vh; 
+    }
+
     .container { width: 100%; max-width: 420px; }
-    .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    
+    .card { 
+      background: var(--card); 
+      padding: 24px; 
+      border-radius: 16px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+    }
+
     h1 { margin: 0 0 4px; font-size: 20px; text-align: center; }
-    .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; display: inline-block; padding: 4px 12px; border-radius: 20px; width: 100%; }
+    
+    .subtitle { 
+      text-align: center; 
+      color: #6b7280; 
+      font-size: 13px; 
+      margin-bottom: 20px; 
+      background: #eef2ff; 
+      display: inline-block; 
+      padding: 4px 12px; 
+      border-radius: 20px; 
+      width: 100%; 
+      box-sizing: border-box;
+    }
+
     label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
-    select, input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; background: #fff; box-sizing: border-box; }
-    select:focus, input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    
+    select, input, textarea { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid #d1d5db; 
+      border-radius: 10px; 
+      font-size: 16px; 
+      background: #fff; 
+      box-sizing: border-box; 
+    }
+
+    select:focus, input:focus, textarea:focus { 
+      border-color: var(--primary); 
+      outline: none; 
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); 
+    }
+
     input[readonly] { background: #f9fafb; color: #6b7280; }
-    button { width: 100%; margin-top: 24px; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+    button { 
+      width: 100%; 
+      margin-top: 24px; 
+      padding: 14px; 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      border-radius: 10px; 
+      font-size: 16px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: background 0.2s;
+    }
+    button:hover { background-color: #1d4ed8; }
     button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .spinner { display: none; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 5px; vertical-align: middle; }
+
+    /* Spinner Loading */
+    .spinner { 
+      display: none; 
+      width: 14px; 
+      height: 14px; 
+      border: 2px solid #ccc; 
+      border-top-color: var(--primary); 
+      border-radius: 50%; 
+      animation: spin 0.8s linear infinite; 
+      margin-left: 5px; 
+      vertical-align: middle; 
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 10px; border-radius: 8px; display: none; }
+
+    /* Feedback Messages */
+    #msg { 
+      margin-top: 16px; 
+      text-align: center; 
+      font-size: 14px; 
+      padding: 10px; 
+      border-radius: 8px; 
+      display: none; 
+    }
     .success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    /* Style baru untuk peringatan Terlambat (Kuning/Oranye) */
+    .warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
   </style>
 </head>
 <body>
@@ -65,10 +148,9 @@
 
 <script>
   // ==========================================
-  // PASTE URL DEPLOYMENT ANDA DI BAWAH INI
+  // URL SCRIPT GOOGLE APPS SCRIPT
   // ==========================================
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwF6p4YykLw3g2aqzQpnlxLO2rshldr_YifkbVTVwWY8QDUet8lHc2J22RBnAJ0sjRl/exec'; 
-  // Contoh: 'https://script.google.com/macros/s/AKfycbx.../exec'
 
   let dbSiswa = [];
 
@@ -95,7 +177,7 @@
         spin.style.display = 'none';
       })
       .catch(err => {
-        alert("Gagal memuat kelas. Pastikan URL Script benar.");
+        alert("Gagal memuat kelas. Periksa koneksi internet.");
         spin.style.display = 'none';
       });
   };
@@ -154,7 +236,7 @@
     };
 
     if(!data.nis || !data.nama) {
-      alert("Mohon lengkapi data!");
+      alert("Mohon lengkapi data Nama dan Kelas!");
       return;
     }
 
@@ -162,7 +244,6 @@
     btn.innerText = "Mengirim...";
     msg.style.display = 'none';
 
-    // Menggunakan fetch dengan mode no-cors/text untuk menghindari preflight error di GAS
     fetch(SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify(data)
@@ -174,13 +255,23 @@
       msg.style.display = 'block';
       
       if(res.ok) {
-        msg.className = 'success';
+        // Cek apakah pesan mengandung kata "TERLAMBAT" dari server
+        // (Logika > 06.30 yang dibuat di backend)
+        if (res.message.includes("TERLAMBAT") || res.message.includes("Terlambat")) {
+            msg.className = 'warning'; // Warna Kuning/Oranye
+        } else {
+            msg.className = 'success'; // Warna Hijau
+        }
+        
         msg.innerText = res.message;
-        // Reset Form
+
+        // Reset Form agar siap input lagi
         document.getElementById('nama').value = '';
         document.getElementById('nis').value = '';
         document.getElementById('ket').value = '';
+        document.getElementById('status').value = 'Hadir'; // Reset ke default
       } else {
+        // Jika Error (misal sudah absen sebelumnya)
         msg.className = 'error';
         msg.innerText = res.message;
       }
@@ -190,7 +281,7 @@
       btn.innerText = "Kirim Absensi";
       msg.style.display = 'block';
       msg.className = 'error';
-      msg.innerText = "Gagal kirim. Cek koneksi.";
+      msg.innerText = "Gagal kirim. Cek koneksi internet.";
     });
   }
 </script>
