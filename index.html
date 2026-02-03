@@ -3,313 +3,197 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-  <title>Absensi Siswa</title>
+  <title>Absensi SMKN Bojonggambir</title>
   <style>
-    :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg: #f3f4f6;
-      --card-bg: #ffffff;
-      --text: #1f2937;
-      --text-muted: #6b7280;
-      --border: #d1d5db;
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-      color: var(--text);
-    }
-
-    /* Container Utama */
-    .container {
-      width: 100%;
-      max-width: 480px; /* Batas lebar untuk Desktop */
-      padding: 20px;
-      margin: auto;
-    }
-
-    .card {
-      background: var(--card-bg);
-      padding: 24px;
-      border-radius: var(--radius);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-
-    /* Header */
-    header { text-align: center; margin-bottom: 24px; }
-    h1 { margin: 0; font-size: 22px; font-weight: 700; color: #111827; }
-    .date-badge {
-      display: inline-block;
-      background: #e0e7ff;
-      color: var(--primary);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-top: 8px;
-    }
-
-    /* Form Elements */
-    .form-group { margin-bottom: 16px; position: relative; }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 12px 14px;
-      font-size: 16px; /* Font 16px mencegah zoom otomatis di iPhone */
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #fff;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      appearance: none; /* Hapus gaya default browser */
-    }
-
-    /* Custom Arrow untuk Select */
-    .select-wrapper { position: relative; }
-    .select-wrapper::after {
-      content: "▼";
-      font-size: 10px;
-      color: var(--text-muted);
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    input[readonly] {
-      background-color: #f9fafb;
-      color: var(--text-muted);
-      cursor: default;
-    }
-
-    textarea { resize: vertical; min-height: 80px; }
-
-    /* Button */
-    .btn-submit {
-      width: 100%;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: var(--radius);
-      cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.2s;
-    }
-    .btn-submit:active { transform: scale(0.98); }
-    .btn-submit:hover { background-color: var(--primary-hover); }
-    .btn-submit:disabled { background-color: #9ca3af; cursor: not-allowed; }
-
-    /* Loading Spinner */
-    .spinner {
-      display: none;
-      width: 18px;
-      height: 18px;
-      border: 2px solid #e5e7eb;
-      border-top: 2px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      position: absolute;
-      right: 10px;
-      top: 38px;
-      z-index: 10;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* Feedback Message */
-    #msg { margin-top: 16px; text-align: center; font-size: 14px; }
-    .msg-ok { color: #065f46; background: #d1fae5; padding: 12px; border-radius: 8px; border: 1px solid #a7f3d0; }
-    .msg-err { color: #991b1b; background: #fee2e2; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; }
-
-    /* Footer */
-    .footer { text-align: center; margin-top: 24px; font-size: 12px; color: #9ca3af; }
-
-    /* Responsif Layar Kecil (HP) */
-    @media (max-width: 480px) {
-      body { background: #fff; align-items: flex-start; }
-      .container { padding: 0; max-width: 100%; }
-      .card { box-shadow: none; border-radius: 0; padding: 20px; }
-      h1 { font-size: 20px; }
-    }
+    /* CSS RESPONSIF & MODERN */
+    :root { --primary: #2563eb; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); display: flex; justify-content: center; min-height: 90vh; }
+    .container { width: 100%; max-width: 420px; }
+    .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    h1 { margin: 0 0 4px; font-size: 20px; text-align: center; }
+    .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; display: inline-block; padding: 4px 12px; border-radius: 20px; width: 100%; }
+    label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
+    select, input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; background: #fff; box-sizing: border-box; }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    input[readonly] { background: #f9fafb; color: #6b7280; }
+    button { width: 100%; margin-top: 24px; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .spinner { display: none; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 5px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 10px; border-radius: 8px; display: none; }
+    .success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="card">
-      <header>
-        <h1>Presensi Siswa</h1>
-        <div class="date-badge">📅 <?= tanggalHariIni ?></div>
-      </header>
+<div class="container">
+  <div class="card">
+    <h1>Absensi Siswa</h1>
+    <div class="subtitle" id="tanggalDisplay">Memuat Tanggal...</div>
 
-      <div class="form-group">
-        <label>Kelas</label>
-        <div class="select-wrapper">
-          <select id="kelas" onchange="updateSiswa()">
-            <option value="">Pilih Kelas</option>
-            <? listKelas.forEach(k => { ?>
-              <option value="<?= k ?>"><?= k ?></option>
-            <? }) ?>
-          </select>
-        </div>
-      </div>
+    <form onsubmit="return false">
+      <label>Kelas <span id="loadKelas" class="spinner"></span></label>
+      <select id="kelas" onchange="loadSiswa()">
+        <option value="">-- Pilih Kelas --</option>
+      </select>
 
-      <div class="form-group" style="position: relative;">
-        <label>Nama Siswa</label>
-        <div class="spinner" id="loadingSpinner"></div>
-        <div class="select-wrapper">
-          <select id="nama" onchange="updateNIS()" disabled>
-            <option value="">-- Pilih Kelas Dahulu --</option>
-          </select>
-        </div>
-      </div>
+      <label>Nama Siswa <span id="loadSiswa" class="spinner"></span></label>
+      <select id="nama" onchange="setNIS()" disabled>
+        <option value="">-- Pilih Kelas Dulu --</option>
+      </select>
 
-      <div class="form-group">
-        <label>NIS</label>
-        <input id="nis" type="text" placeholder="Otomatis" readonly />
-      </div>
+      <label>NIS</label>
+      <input type="text" id="nis" placeholder="Otomatis" readonly>
 
-      <div class="form-group">
-        <label>Status Kehadiran</label>
-        <div class="select-wrapper">
-          <select id="status">
-            <option value="Hadir">✅ Hadir</option>
-            <option value="Terlambat">⚠️ Terlambat</option>
-            <option value="Izin">📩 Izin</option>
-            <option value="Sakit">🤒 Sakit</option>
-          </select>
-        </div>
-      </div>
+      <label>Status Kehadiran</label>
+      <select id="status">
+        <option value="Hadir">✅ Hadir</option>
+        <option value="Terlambat">⚠️ Terlambat</option>
+        <option value="Izin">📩 Izin</option>
+        <option value="Sakit">🤒 Sakit</option>
+      </select>
 
-      <div class="form-group">
-        <label>Keterangan (Opsional)</label>
-        <textarea id="ket" placeholder="Tulis alasan jika sakit/izin..."></textarea>
-      </div>
+      <label>Keterangan (Opsional)</label>
+      <textarea id="ket" rows="2" placeholder="Alasan..."></textarea>
 
-      <button id="btnKirim" class="btn-submit" onclick="kirim()">Kirim Absensi</button>
-      
-      <div id="msg"></div>
-      
-      <div class="footer">Sistem Absensi v2.0</div>
-    </div>
+      <button id="btnKirim" onclick="kirimData()">Kirim Absensi</button>
+    </form>
+    <div id="msg"></div>
   </div>
+</div>
 
-  <script>
-    let dataSiswaMentah = [];
+<script>
+  // ==========================================
+  // PASTE URL DEPLOYMENT ANDA DI BAWAH INI
+  // ==========================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwF6p4YykLw3g2aqzQpnlxLO2rshldr_YifkbVTVwWY8QDUet8lHc2J22RBnAJ0sjRl/exec'; 
+  // Contoh: 'https://script.google.com/macros/s/AKfycbx.../exec'
 
-    function updateSiswa() {
-      const kelas = document.getElementById('kelas').value;
-      const selectNama = document.getElementById('nama');
-      const inputNIS = document.getElementById('nis');
-      const spinner = document.getElementById('loadingSpinner');
+  let dbSiswa = [];
 
-      // Reset
-      selectNama.innerHTML = '<option value="">Memuat...</option>';
-      selectNama.disabled = true;
-      inputNIS.value = '';
-      
-      if (!kelas) {
-        selectNama.innerHTML = '<option value="">-- Pilih Kelas Dahulu --</option>';
-        return;
-      }
+  // 1. Initial Load (Tanggal & Daftar Kelas)
+  window.onload = function() {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('tanggalDisplay').innerText = new Date().toLocaleDateString('id-ID', options);
+    
+    // Ambil Kelas dari API
+    const spin = document.getElementById('loadKelas');
+    const selKelas = document.getElementById('kelas');
+    
+    spin.style.display = 'inline-block';
+    
+    fetch(SCRIPT_URL + '?action=getKelas')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(k => {
+          let opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = k;
+          selKelas.appendChild(opt);
+        });
+        spin.style.display = 'none';
+      })
+      .catch(err => {
+        alert("Gagal memuat kelas. Pastikan URL Script benar.");
+        spin.style.display = 'none';
+      });
+  };
 
-      spinner.style.display = 'block'; // Tampilkan spinner
+  // 2. Load Siswa saat Kelas dipilih
+  function loadSiswa() {
+    const kelas = document.getElementById('kelas').value;
+    const elNama = document.getElementById('nama');
+    const spin = document.getElementById('loadSiswa');
+    
+    elNama.innerHTML = '<option value="">Memuat...</option>';
+    elNama.disabled = true;
+    document.getElementById('nis').value = '';
+    
+    if(!kelas) {
+      elNama.innerHTML = '<option value="">-- Pilih Kelas Dulu --</option>';
+      return;
+    }
 
-      google.script.run.withSuccessHandler(siswa => {
-        dataSiswaMentah = siswa;
-        
-        selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
-        siswa.forEach(s => {
+    spin.style.display = 'inline-block';
+
+    fetch(SCRIPT_URL + '?action=getSiswa&kelas=' + encodeURIComponent(kelas))
+      .then(res => res.json())
+      .then(data => {
+        dbSiswa = data;
+        elNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
+        data.forEach(s => {
           let opt = document.createElement('option');
           opt.value = s.nama;
           opt.textContent = s.nama;
-          selectNama.appendChild(opt);
+          elNama.appendChild(opt);
         });
-        
-        selectNama.disabled = false;
-        spinner.style.display = 'none'; // Sembunyikan spinner
-      }).getSiswaByKelas(kelas);
+        elNama.disabled = false;
+        spin.style.display = 'none';
+      });
+  }
+
+  // 3. Set NIS Otomatis
+  function setNIS() {
+    const nama = document.getElementById('nama').value;
+    const item = dbSiswa.find(s => s.nama === nama);
+    if(item) document.getElementById('nis').value = item.nis;
+  }
+
+  // 4. Kirim Data (POST)
+  function kirimData() {
+    const btn = document.getElementById('btnKirim');
+    const msg = document.getElementById('msg');
+    
+    const data = {
+      nis: document.getElementById('nis').value,
+      nama: document.getElementById('nama').value,
+      kelas: document.getElementById('kelas').value,
+      status: document.getElementById('status').value,
+      keterangan: document.getElementById('ket').value
+    };
+
+    if(!data.nis || !data.nama) {
+      alert("Mohon lengkapi data!");
+      return;
     }
 
-    function updateNIS() {
-      const nama = document.getElementById('nama').value;
-      const inputNIS = document.getElementById('nis');
-      const siswa = dataSiswaMentah.find(s => s.nama === nama);
+    btn.disabled = true;
+    btn.innerText = "Mengirim...";
+    msg.style.display = 'none';
+
+    // Menggunakan fetch dengan mode no-cors/text untuk menghindari preflight error di GAS
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.innerText = "Kirim Absensi";
+      msg.style.display = 'block';
       
-      // Efek visual kecil saat NIS terisi
-      if (siswa) {
-        inputNIS.value = siswa.nis;
-        inputNIS.style.borderColor = '#2563eb';
-        setTimeout(() => inputNIS.style.borderColor = '#d1d5db', 500);
+      if(res.ok) {
+        msg.className = 'success';
+        msg.innerText = res.message;
+        // Reset Form
+        document.getElementById('nama').value = '';
+        document.getElementById('nis').value = '';
+        document.getElementById('ket').value = '';
       } else {
-        inputNIS.value = '';
+        msg.className = 'error';
+        msg.innerText = res.message;
       }
-    }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerText = "Kirim Absensi";
+      msg.style.display = 'block';
+      msg.className = 'error';
+      msg.innerText = "Gagal kirim. Cek koneksi.";
+    });
+  }
+</script>
 
-    function kirim() {
-      const btn = document.getElementById('btnKirim');
-      const msg = document.getElementById('msg');
-      const data = {
-        kelas: document.getElementById('kelas').value,
-        nama: document.getElementById('nama').value,
-        nis: document.getElementById('nis').value,
-        status: document.getElementById('status').value,
-        keterangan: document.getElementById('ket').value
-      };
-
-      if (!data.nis || !data.nama) {
-        msg.innerHTML = '<div class="msg-err">Mohon pilih Nama Siswa terlebih dahulu!</div>';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = 'Mengirim...';
-      msg.innerHTML = '';
-
-      google.script.run.withSuccessHandler(res => {
-        btn.disabled = false;
-        btn.innerText = 'Kirim Absensi';
-        
-        if (res.ok) {
-          msg.innerHTML = `<div class="msg-ok"><b>Berhasil!</b> ${res.message}</div>`;
-          // Reset form parsial (tetap di kelas yang sama agar guru mudah input siswa berikutnya)
-          document.getElementById('nama').value = '';
-          document.getElementById('nis').value = '';
-          document.getElementById('ket').value = '';
-          document.getElementById('status').value = 'Hadir';
-        } else {
-          msg.innerHTML = `<div class="msg-err"><b>Gagal:</b> ${res.message}</div>`;
-        }
-      }).withFailureHandler(err => {
-        btn.disabled = false;
-        btn.innerText = 'Kirim Absensi';
-        msg.innerHTML = `<div class="msg-err">Terjadi kesalahan koneksi.</div>`;
-      }).submitAbsensi(data);
-    }
-  </script>
 </body>
 </html>
