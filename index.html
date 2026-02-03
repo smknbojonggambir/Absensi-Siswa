@@ -5,71 +5,126 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Absensi Siswa</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    .card { max-width: 520px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
-    h1 { font-size: 20px; margin: 0 0 8px; }
-    label { display:block; margin-top: 12px; font-weight:600; }
-    input, select, textarea { width: 100%; padding: 10px; border:1px solid #d1d5db; border-radius: 8px; }
-    button { margin-top:16px; background:#2563eb; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
-    .muted { color:#6b7280; font-size: 12px; }
-    .ok { color: #14532d; background:#dcfce7; padding:8px 10px; border-radius:8px; margin-top:10px; }
-    .err{ color: #7f1d1d; background:#fee2e2; padding:8px 10px; border-radius:8px; margin-top:10px; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; background: #f3f4f6; }
+    .card { max-width: 450px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    h1 { font-size: 20px; margin-bottom: 5px; color: #1f2937; }
+    label { display:block; margin-top: 15px; font-weight:600; font-size: 14px; color: #4b5563; }
+    select, textarea, input { width: 100%; padding: 12px; border:1px solid #d1d5db; border-radius: 10px; margin-top: 5px; box-sizing: border-box; font-size: 14px; }
+    input[readonly] { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; }
+    button { width: 100%; margin-top: 20px; background:#2563eb; color:white; border:none; padding:14px; border-radius:10px; cursor:pointer; font-weight: 600; }
+    button:disabled { background: #94a3b8; }
+    .ok { color:#065f46; background:#d1fae5; padding:10px; border-radius:8px; margin-top:15px; text-align:center; }
+    .err { color:#991b1b; background:#fee2e2; padding:10px; border-radius:8px; margin-top:15px; text-align:center; }
+    .loading-text { font-size: 12px; color: #2563eb; display: none; }
   </style>
 </head>
 <body>
+
   <div class="card">
     <h1>Form Absensi</h1>
-    <div class="muted">Tanggal: <?= tanggalHariIni ?></div>
+    <div style="color:#6b7280; font-size: 12px;">📅 <?= tanggalHariIni ?></div>
+
+    <label>Pilih Kelas</label>
+    <select id="kelas" onchange="updateSiswa()">
+      <option value="">-- Pilih Kelas --</option>
+      <? listKelas.forEach(k => { ?>
+        <option value="<?= k ?>"><?= k ?></option>
+      <? }) ?>
+    </select>
+
+    <label>Nama Siswa</label>
+    <span id="loadingSiswa" class="loading-text">Memuat daftar siswa...</span>
+    <select id="nama" onchange="updateNIS()" disabled>
+      <option value="">-- Pilih Nama --</option>
+    </select>
 
     <label>NIS</label>
-    <input id="nis" type="text" placeholder="mis. 70101" required />
-
-    <label>Nama</label>
-    <input id="nama" type="text" placeholder="Nama lengkap" required />
-
-    <label>Kelas</label>
-    <input id="kelas" type="text" placeholder="mis. 7A" required />
+    <input id="nis" type="text" placeholder="NIS akan muncul otomatis" readonly />
 
     <label>Status</label>
     <select id="status">
       <option>Hadir</option>
-      <option>Terlambat</option>
       <option>Izin</option>
       <option>Sakit</option>
-      <option>Alpa</option>
+      <option>Terlambat</option>
     </select>
 
-    <label>Keterangan (opsional)</label>
-    <textarea id="ket" rows="2" placeholder="Mis. surat izin, alasan, dsb."></textarea>
+    <label>Keterangan (Opsional)</label>
+    <textarea id="ket" rows="2"></textarea>
 
-    <button onclick="kirim()">Kirim Absensi</button>
+    <button id="btnKirim" onclick="kirim()">Kirim Absensi</button>
     <div id="msg"></div>
   </div>
 
   <script>
+    let dataSiswaMentah = [];
+
+    // Fungsi saat Kelas dipilih
+    function updateSiswa() {
+      const kelas = document.getElementById('kelas').value;
+      const selectNama = document.getElementById('nama');
+      const inputNIS = document.getElementById('nis');
+      const loading = document.getElementById('loadingSiswa');
+
+      selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
+      selectNama.disabled = true;
+      inputNIS.value = '';
+      
+      if (!kelas) return;
+
+      loading.style.display = 'inline';
+
+      google.script.run.withSuccessHandler(siswa => {
+        dataSiswaMentah = siswa; // Simpan untuk ambil NIS nanti
+        siswa.forEach(s => {
+          let opt = document.createElement('option');
+          opt.value = s.nama;
+          opt.textContent = s.nama;
+          selectNama.appendChild(opt);
+        });
+        selectNama.disabled = false;
+        loading.style.display = 'none';
+      }).getSiswaByKelas(kelas);
+    }
+
+    // Fungsi saat Nama dipilih
+    function updateNIS() {
+      const nama = document.getElementById('nama').value;
+      const inputNIS = document.getElementById('nis');
+      
+      const siswa = dataSiswaMentah.find(s => s.nama === nama);
+      inputNIS.value = siswa ? siswa.nis : '';
+    }
+
     function kirim() {
-      const body = {
-        nis: document.getElementById('nis').value.trim(),
-        nama: document.getElementById('nama').value.trim(),
-        kelas: document.getElementById('kelas').value.trim(),
-        status: document.getElementById('status').value.trim(),
-        keterangan: document.getElementById('ket').value.trim()
-      };
+      const btn = document.getElementById('btnKirim');
       const msg = document.getElementById('msg');
-      msg.innerHTML = '';
+      const data = {
+        kelas: document.getElementById('kelas').value,
+        nama: document.getElementById('nama').value,
+        nis: document.getElementById('nis').value,
+        status: document.getElementById('status').value,
+        keterangan: document.getElementById('ket').value
+      };
+
+      if (!data.nis || !data.nama) {
+        msg.innerHTML = '<div class="err">Lengkapi data terlebih dahulu!</div>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Mengirim...';
 
       google.script.run.withSuccessHandler(res => {
+        btn.disabled = false;
+        btn.innerText = 'Kirim Absensi';
         msg.innerHTML = `<div class="${res.ok ? 'ok':'err'}">${res.message}</div>`;
         if (res.ok) {
-          document.getElementById('nis').value='';
-          document.getElementById('nama').value='';
-          document.getElementById('kelas').value='';
-          document.getElementById('status').value='Hadir';
-          document.getElementById('ket').value='';
+          document.getElementById('nama').value = '';
+          document.getElementById('nis').value = '';
+          document.getElementById('ket').value = '';
         }
-      }).withFailureHandler(err => {
-        msg.innerHTML = `<div class="err">Gagal mengirim: ${err.message || err}</div>`;
-      }).submitAbsensi(body);
+      }).submitAbsensi(data);
     }
   </script>
 </body>
