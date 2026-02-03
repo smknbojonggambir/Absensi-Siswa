@@ -8,30 +8,24 @@
     :root { --primary: #2563eb; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; }
     body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; min-height: 90vh; }
     
-    /* Container & Layout */
     .container { width: 100%; max-width: 500px; margin: 0 auto; }
     .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
     
-    /* Typography */
     h1 { margin: 0 0 10px; font-size: 20px; text-align: center; }
     .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; padding: 4px 12px; border-radius: 20px; display: inline-block; width: 100%; box-sizing: border-box; }
     
-    /* Form Elements */
     label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
     select, input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
     
-    /* Buttons */
     button { width: 100%; margin-top: 15px; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     button:disabled { background: #9ca3af; cursor: not-allowed; }
     .btn-secondary { background: #4b5563; margin-top: 10px; }
     .btn-print { background: #059669; }
     
-    /* Navigation Tabs */
     .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
     .nav-btn { background: #e5e7eb; color: #374151; padding: 10px 20px; border-radius: 20px; font-size: 14px; width: auto; margin: 0; }
     .nav-btn.active { background: var(--primary); color: white; }
 
-    /* Messages & Loader */
     .spinner { display: none; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 5px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 10px; border-radius: 8px; display: none; }
@@ -39,10 +33,10 @@
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     .warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
 
-    /* Table Styles for Report */
+    /* Report Table */
     .table-responsive { overflow-x: auto; margin-top: 15px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; white-space: nowrap; }
     th { background: #f9fafb; font-weight: 600; }
     .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     .bg-Hadir { background: #d1fae5; color: #065f46; }
@@ -50,17 +44,24 @@
     .bg-Sakit { background: #fee2e2; color: #991b1b; }
     .bg-Izin { background: #e0f2fe; color: #075985; }
 
+    /* Input Group for Dates */
+    .date-group { display: flex; gap: 10px; }
+    .date-group div { flex: 1; }
+
     /* --- PRINT STYLES --- */
     @media print {
       body { background: white; padding: 0; }
-      .container { max-width: 100%; width: 100%; }
-      .nav-tabs, #sectionForm, .no-print, label[for="tglLaporan"], #btnLoadLaporan { display: none !important; }
+      .container { max-width: 100%; width: 100%; margin: 0; }
+      .nav-tabs, #sectionForm, .no-print, .input-area { display: none !important; }
       .card { box-shadow: none; border: none; padding: 0; }
       #sectionLaporan { display: block !important; }
-      h1 { font-size: 24px; text-decoration: underline; }
-      table { border: 1px solid #000; font-size: 12px; width: 100%; }
-      th, td { border: 1px solid #000; padding: 5px; color: black; }
-      .subtitle { background: none; color: black; text-align: left; padding: 0; margin-bottom: 10px; border: none; }
+      h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; }
+      .subtitle { display: none; } /* Hide default subtitle, use custom report header */
+      #reportHeader { display: block !important; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
+      
+      table { border: 1px solid #000; font-size: 11px; width: 100%; }
+      th, td { border: 1px solid #000; padding: 4px; color: black; white-space: normal; }
+      th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
     }
   </style>
 </head>
@@ -109,21 +110,54 @@
     </div>
 
     <div id="sectionLaporan" style="display: none;">
-      <label for="tglLaporan">Pilih Tanggal Laporan:</label>
-      <input type="date" id="tglLaporan">
-      <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Lihat Data</button>
+      
+      <div class="input-area">
+        <label>Filter Kelas:</label>
+        <select id="lapKelas">
+            <option value="">-- Semua Kelas --</option>
+        </select>
+
+        <label>Jenis Laporan:</label>
+        <select id="lapPeriode" onchange="toggleDateInputs()">
+            <option value="harian">Laporan Harian</option>
+            <option value="range">Laporan Berkala (Mingguan/Semester)</option>
+        </select>
+
+        <div id="dateHarian">
+            <label>Pilih Tanggal:</label>
+            <input type="date" id="tglHarian">
+        </div>
+
+        <div id="dateRange" class="date-group" style="display:none">
+            <div>
+                <label>Dari:</label>
+                <input type="date" id="tglMulai">
+            </div>
+            <div>
+                <label>Sampai:</label>
+                <input type="date" id="tglSelesai">
+            </div>
+        </div>
+
+        <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Lihat Data</button>
+      </div>
       
       <div id="areaLaporan" style="display:none; margin-top:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div id="reportHeader" style="display:none;">
+            Laporan Absensi <span id="printPeriode"></span><br>
+            Kelas: <span id="printKelas"></span>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;" class="no-print">
             <strong id="infoTotal">Total: 0</strong>
-            <button onclick="window.print()" class="btn-print no-print" style="width:auto; margin:0; padding:8px 16px;">🖨️ Cetak / PDF</button>
+            <button onclick="window.print()" class="btn-print" style="width:auto; margin:0; padding:8px 16px;">🖨️ Cetak</button>
         </div>
         <div class="table-responsive">
           <table id="tabelLaporan">
             <thead>
               <tr>
                 <th>No</th>
-                <th>Jam</th>
+                <th>Tgl</th>
                 <th>Nama Siswa</th>
                 <th>Kelas</th>
                 <th>Status</th>
@@ -131,7 +165,7 @@
               </tr>
             </thead>
             <tbody>
-              </tbody>
+            </tbody>
           </table>
         </div>
       </div>
@@ -141,8 +175,8 @@
 </div>
 
 <script>
-  // PASTE URL DEPLOYMENT BARU ANDA DISINI
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaKSem6Fd-fhOLv3f5MCXzUw2Sw-3YIFvPKN9AM3-xMie3hoJ8Nq_0ZUmOsdXDlX3q/exec'; 
+  // --- GANTI URL INI DENGAN URL DEPLOY TERBARU ---
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxLIxjMeY86fVNcTM7_5AKEfkVsZpSluS8kwrZGVXndymuUMcsa2fAqmazr9EWtlwg/exec'; 
 
   let dbSiswa = [];
 
@@ -150,8 +184,11 @@
     const today = new Date();
     document.getElementById('tanggalDisplay').innerText = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     
-    // Set default input date laporan ke hari ini
-    document.getElementById('tglLaporan').valueAsDate = today;
+    // Set default dates
+    const yyyymmdd = today.toISOString().split('T')[0];
+    document.getElementById('tglHarian').value = yyyymmdd;
+    document.getElementById('tglMulai').value = yyyymmdd;
+    document.getElementById('tglSelesai').value = yyyymmdd;
 
     loadDataAwal();
   };
@@ -162,27 +199,44 @@
     const btns = document.querySelectorAll('.nav-btn');
     
     if (tab === 'form') {
-      formSec.style.display = 'block';
-      lapSec.style.display = 'none';
-      btns[0].classList.add('active');
-      btns[1].classList.remove('active');
+      formSec.style.display = 'block'; lapSec.style.display = 'none';
+      btns[0].classList.add('active'); btns[1].classList.remove('active');
       document.querySelector('h1').innerText = "Absensi Siswa";
     } else {
-      formSec.style.display = 'none';
-      lapSec.style.display = 'block';
-      btns[0].classList.remove('active');
-      btns[1].classList.add('active');
-      document.querySelector('h1').innerText = "Laporan Harian";
+      formSec.style.display = 'none'; lapSec.style.display = 'block';
+      btns[0].classList.remove('active'); btns[1].classList.add('active');
+      document.querySelector('h1').innerText = "Laporan Absensi";
     }
   }
 
-  // --- FUNGSI LOAD DATA KELAS (SAMA) ---
+  function toggleDateInputs() {
+    const mode = document.getElementById('lapPeriode').value;
+    if (mode === 'harian') {
+        document.getElementById('dateHarian').style.display = 'block';
+        document.getElementById('dateRange').style.display = 'none';
+    } else {
+        document.getElementById('dateHarian').style.display = 'none';
+        document.getElementById('dateRange').style.display = 'flex';
+    }
+  }
+
+  // --- DATA LOADING ---
   function loadDataAwal() {
     const spin = document.getElementById('loadKelas');
     spin.style.display = 'inline-block';
+    
     fetch(SCRIPT_URL + '?action=getKelas').then(r=>r.json()).then(data => {
+      // Isi Dropdown Form Absen
       const sel = document.getElementById('kelas');
-      data.forEach(k => { let o = document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); });
+      // Isi Dropdown Filter Laporan
+      const selLap = document.getElementById('lapKelas');
+      
+      data.forEach(k => { 
+          // Option untuk form
+          let o1 = document.createElement('option'); o1.value=k; o1.textContent=k; sel.appendChild(o1);
+          // Option untuk laporan
+          let o2 = document.createElement('option'); o2.value=k; o2.textContent=k; selLap.appendChild(o2);
+      });
       spin.style.display = 'none';
     }).catch(e => { alert('Gagal memuat kelas'); spin.style.display = 'none'; });
   }
@@ -207,7 +261,7 @@
     if(i) document.getElementById('nis').value = i.nis;
   }
 
-  // --- LOGIKA UTAMA PENGIRIMAN (SAMA) ---
+  // --- SUBMIT ABSENSI ---
   function cekLokasiDanKirim() {
     const status = document.getElementById('status').value;
     const btn = document.getElementById('btnKirim');
@@ -215,30 +269,18 @@
     const nis = document.getElementById('nis').value;
 
     if(!nis) { alert("Pilih siswa dulu!"); return; }
-
-    if (status === 'Izin' || status === 'Sakit') {
-      kirimKeServer({ lat: null, lng: null });
-      return;
-    }
+    if (status === 'Izin' || status === 'Sakit') { kirimKeServer({ lat: null, lng: null }); return; }
 
     btn.disabled = true; btn.innerText = "Mengambil Lokasi..."; msg.style.display = 'none';
 
     if (!navigator.geolocation) {
-      btn.disabled = false; btn.innerText = "Kirim Absensi";
-      alert("Browser Anda tidak mendukung GPS.");
-      return;
+      btn.disabled = false; btn.innerText = "Kirim Absensi"; alert("Browser tidak support GPS."); return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        kirimKeServer({ lat: position.coords.latitude, lng: position.coords.longitude });
-      },
-      (error) => {
-        btn.disabled = false; btn.innerText = "Kirim Absensi";
-        msg.style.display = 'block'; msg.className = 'error';
-        msg.innerText = "Gagal Ambil Lokasi: Pastikan GPS Aktif.";
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      (pos) => { kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+      (err) => { btn.disabled=false; btn.innerText="Kirim Absensi"; msg.style.display='block'; msg.className='error'; msg.innerText="Gagal GPS. Izinkan lokasi!"; },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
@@ -258,53 +300,64 @@
 
     btn.innerText = "Mengirim Data...";
 
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    })
+    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(res => {
       btn.disabled = false; btn.innerText = "Kirim Absensi"; msg.style.display = 'block';
       if(res.ok) {
         msg.className = res.message.includes("TERLAMBAT") ? 'warning' : 'success';
         msg.innerText = res.message;
-        document.getElementById('nama').value = '';
-        document.getElementById('nis').value = '';
-        document.getElementById('ket').value = '';
-        document.getElementById('status').value = 'Hadir';
+        document.getElementById('nama').value = ''; document.getElementById('nis').value = ''; document.getElementById('ket').value = ''; document.getElementById('status').value = 'Hadir';
       } else {
         msg.className = 'error'; msg.innerText = res.message;
       }
     })
-    .catch(err => {
-      btn.disabled = false; btn.innerText = "Kirim Absensi";
-      msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Koneksi Bermasalah.";
-    });
+    .catch(err => { btn.disabled = false; btn.innerText = "Kirim Absensi"; msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Koneksi Error."; });
   }
 
-  // --- FITUR BARU: LOAD & CETAK LAPORAN ---
+  // --- LAPORAN FILTER (HARIAN/MINGGUAN/SEMESTER) ---
   function loadLaporan() {
-    const tgl = document.getElementById('tglLaporan').value;
-    if(!tgl) { alert("Pilih tanggal dulu"); return; }
+    const kelas = document.getElementById('lapKelas').value;
+    const mode = document.getElementById('lapPeriode').value;
+    
+    let tglMulai, tglAkhir;
+
+    if (mode === 'harian') {
+        const tgl = document.getElementById('tglHarian').value;
+        if(!tgl) { alert("Pilih tanggal!"); return; }
+        tglMulai = tgl;
+        tglAkhir = tgl;
+    } else {
+        tglMulai = document.getElementById('tglMulai').value;
+        tglAkhir = document.getElementById('tglSelesai').value;
+        if(!tglMulai || !tglAkhir) { alert("Pilih tanggal mulai dan sampai!"); return; }
+        if(tglMulai > tglAkhir) { alert("Tanggal mulai tidak boleh lebih besar dari selesai!"); return; }
+    }
     
     const btn = document.getElementById('btnLoadLaporan');
     const area = document.getElementById('areaLaporan');
     const tbody = document.querySelector('#tabelLaporan tbody');
     
-    btn.disabled = true; btn.innerText = "Memuat Data...";
-    area.style.display = 'none';
-    tbody.innerHTML = '';
+    btn.disabled = true; btn.innerText = "Memuat...";
+    area.style.display = 'none'; tbody.innerHTML = '';
 
-    fetch(SCRIPT_URL + '?action=getLaporan&tanggal=' + tgl)
+    const params = `?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`;
+
+    fetch(SCRIPT_URL + params)
     .then(r => r.json())
     .then(data => {
       btn.disabled = false; btn.innerText = "🔍 Lihat Data";
       area.style.display = 'block';
-      
       document.getElementById('infoTotal').innerText = "Total Data: " + data.length;
 
+      // Update Header Print
+      const namaKelas = kelas ? kelas : "Semua Kelas";
+      const periode = (tglMulai === tglAkhir) ? tglMulai : `${tglMulai} s/d ${tglAkhir}`;
+      document.getElementById('printKelas').innerText = namaKelas;
+      document.getElementById('printPeriode').innerText = periode;
+
       if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Tidak ada data absensi pada tanggal ini.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Tidak ada data.</td></tr>';
         return;
       }
 
@@ -312,7 +365,7 @@
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${i+1}</td>
-          <td>${d.waktu}</td>
+          <td>${d.tanggal}<br><small>${d.waktu}</small></td>
           <td>${d.nama}</td>
           <td>${d.kelas}</td>
           <td><span class="badge bg-${d.status}">${d.status}</span></td>
