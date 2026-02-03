@@ -5,60 +5,138 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <title>Absensi SMKN Bojonggambir</title>
   <style>
-    /* ... CSS SAMA SEPERTI SEBELUMNYA ... */
     :root { --primary: #2563eb; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 90vh; }
-    .container { width: 100%; max-width: 420px; }
-    .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    h1 { margin: 0 0 4px; font-size: 20px; text-align: center; }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; min-height: 90vh; }
+    
+    /* Container & Layout */
+    .container { width: 100%; max-width: 500px; margin: 0 auto; }
+    .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    
+    /* Typography */
+    h1 { margin: 0 0 10px; font-size: 20px; text-align: center; }
     .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; padding: 4px 12px; border-radius: 20px; display: inline-block; width: 100%; box-sizing: border-box; }
+    
+    /* Form Elements */
     label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
     select, input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
-    button { width: 100%; margin-top: 24px; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    
+    /* Buttons */
+    button { width: 100%; margin-top: 15px; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn-secondary { background: #4b5563; margin-top: 10px; }
+    .btn-print { background: #059669; }
+    
+    /* Navigation Tabs */
+    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .nav-btn { background: #e5e7eb; color: #374151; padding: 10px 20px; border-radius: 20px; font-size: 14px; width: auto; margin: 0; }
+    .nav-btn.active { background: var(--primary); color: white; }
+
+    /* Messages & Loader */
     .spinner { display: none; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 5px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 10px; border-radius: 8px; display: none; }
     .success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     .warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+
+    /* Table Styles for Report */
+    .table-responsive { overflow-x: auto; margin-top: 15px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f9fafb; font-weight: 600; }
+    .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .bg-Hadir { background: #d1fae5; color: #065f46; }
+    .bg-Terlambat { background: #fffbeb; color: #b45309; }
+    .bg-Sakit { background: #fee2e2; color: #991b1b; }
+    .bg-Izin { background: #e0f2fe; color: #075985; }
+
+    /* --- PRINT STYLES --- */
+    @media print {
+      body { background: white; padding: 0; }
+      .container { max-width: 100%; width: 100%; }
+      .nav-tabs, #sectionForm, .no-print, label[for="tglLaporan"], #btnLoadLaporan { display: none !important; }
+      .card { box-shadow: none; border: none; padding: 0; }
+      #sectionLaporan { display: block !important; }
+      h1 { font-size: 24px; text-decoration: underline; }
+      table { border: 1px solid #000; font-size: 12px; width: 100%; }
+      th, td { border: 1px solid #000; padding: 5px; color: black; }
+      .subtitle { background: none; color: black; text-align: left; padding: 0; margin-bottom: 10px; border: none; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
+  
+  <div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchTab('form')">📝 Isi Absen</button>
+    <button class="nav-btn" onclick="switchTab('laporan')">🖨️ Cetak Laporan</button>
+  </div>
+
   <div class="card">
     <h1>Absensi Siswa</h1>
     <div class="subtitle" id="tanggalDisplay">Memuat Tanggal...</div>
 
-    <form onsubmit="return false">
-      <label>Kelas <span id="loadKelas" class="spinner"></span></label>
-      <select id="kelas" onchange="loadSiswa()">
-        <option value="">-- Pilih Kelas --</option>
-      </select>
+    <div id="sectionForm">
+      <form onsubmit="return false">
+        <label>Kelas <span id="loadKelas" class="spinner"></span></label>
+        <select id="kelas" onchange="loadSiswa()">
+          <option value="">-- Pilih Kelas --</option>
+        </select>
 
-      <label>Nama Siswa <span id="loadSiswa" class="spinner"></span></label>
-      <select id="nama" onchange="setNIS()" disabled>
-        <option value="">-- Pilih Kelas Dulu --</option>
-      </select>
+        <label>Nama Siswa <span id="loadSiswa" class="spinner"></span></label>
+        <select id="nama" onchange="setNIS()" disabled>
+          <option value="">-- Pilih Kelas Dulu --</option>
+        </select>
 
-      <label>NIS</label>
-      <input type="text" id="nis" placeholder="Otomatis" readonly>
+        <label>NIS</label>
+        <input type="text" id="nis" placeholder="Otomatis" readonly>
 
-      <label>Status Kehadiran</label>
-      <select id="status">
-        <option value="Hadir">✅ Hadir (Wajib di Sekolah)</option>
-        <option value="Terlambat">⚠️ Terlambat</option>
-        <option value="Izin">📩 Izin</option>
-        <option value="Sakit">🤒 Sakit</option>
-      </select>
+        <label>Status Kehadiran</label>
+        <select id="status">
+          <option value="Hadir">✅ Hadir (Wajib di Sekolah)</option>
+          <option value="Terlambat">⚠️ Terlambat</option>
+          <option value="Izin">📩 Izin</option>
+          <option value="Sakit">🤒 Sakit</option>
+        </select>
 
-      <label>Keterangan</label>
-      <textarea id="ket" rows="2" placeholder="Alasan..."></textarea>
+        <label>Keterangan</label>
+        <textarea id="ket" rows="2" placeholder="Alasan..."></textarea>
 
-      <button id="btnKirim" onclick="cekLokasiDanKirim()">Kirim Absensi</button>
-    </form>
-    <div id="msg"></div>
+        <button id="btnKirim" onclick="cekLokasiDanKirim()">Kirim Absensi</button>
+      </form>
+      <div id="msg"></div>
+    </div>
+
+    <div id="sectionLaporan" style="display: none;">
+      <label for="tglLaporan">Pilih Tanggal Laporan:</label>
+      <input type="date" id="tglLaporan">
+      <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Lihat Data</button>
+      
+      <div id="areaLaporan" style="display:none; margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <strong id="infoTotal">Total: 0</strong>
+            <button onclick="window.print()" class="btn-print no-print" style="width:auto; margin:0; padding:8px 16px;">🖨️ Cetak / PDF</button>
+        </div>
+        <div class="table-responsive">
+          <table id="tabelLaporan">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Jam</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th>Status</th>
+                <th>Ket</th>
+              </tr>
+            </thead>
+            <tbody>
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -69,10 +147,36 @@
   let dbSiswa = [];
 
   window.onload = function() {
-    document.getElementById('tanggalDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const today = new Date();
+    document.getElementById('tanggalDisplay').innerText = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // Set default input date laporan ke hari ini
+    document.getElementById('tglLaporan').valueAsDate = today;
+
     loadDataAwal();
   };
 
+  function switchTab(tab) {
+    const formSec = document.getElementById('sectionForm');
+    const lapSec = document.getElementById('sectionLaporan');
+    const btns = document.querySelectorAll('.nav-btn');
+    
+    if (tab === 'form') {
+      formSec.style.display = 'block';
+      lapSec.style.display = 'none';
+      btns[0].classList.add('active');
+      btns[1].classList.remove('active');
+      document.querySelector('h1').innerText = "Absensi Siswa";
+    } else {
+      formSec.style.display = 'none';
+      lapSec.style.display = 'block';
+      btns[0].classList.remove('active');
+      btns[1].classList.add('active');
+      document.querySelector('h1').innerText = "Laporan Harian";
+    }
+  }
+
+  // --- FUNGSI LOAD DATA KELAS (SAMA) ---
   function loadDataAwal() {
     const spin = document.getElementById('loadKelas');
     spin.style.display = 'inline-block';
@@ -103,7 +207,7 @@
     if(i) document.getElementById('nis').value = i.nis;
   }
 
-  // --- LOGIKA UTAMA PENGIRIMAN ---
+  // --- LOGIKA UTAMA PENGIRIMAN (SAMA) ---
   function cekLokasiDanKirim() {
     const status = document.getElementById('status').value;
     const btn = document.getElementById('btnKirim');
@@ -112,16 +216,12 @@
 
     if(!nis) { alert("Pilih siswa dulu!"); return; }
 
-    // Jika Izin/Sakit, langsung kirim tanpa lokasi
     if (status === 'Izin' || status === 'Sakit') {
       kirimKeServer({ lat: null, lng: null });
       return;
     }
 
-    // Jika Hadir/Terlambat, WAJIB Cek Lokasi
-    btn.disabled = true;
-    btn.innerText = "Mengambil Lokasi...";
-    msg.style.display = 'none';
+    btn.disabled = true; btn.innerText = "Mengambil Lokasi..."; msg.style.display = 'none';
 
     if (!navigator.geolocation) {
       btn.disabled = false; btn.innerText = "Kirim Absensi";
@@ -130,20 +230,13 @@
     }
 
     navigator.geolocation.getCurrentPosition(
-      // Sukses dapat lokasi
       (position) => {
-        kirimKeServer({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
+        kirimKeServer({ lat: position.coords.latitude, lng: position.coords.longitude });
       },
-      // Gagal dapat lokasi
       (error) => {
-        btn.disabled = false;
-        btn.innerText = "Kirim Absensi";
-        msg.style.display = 'block';
-        msg.className = 'error';
-        msg.innerText = "Gagal Ambil Lokasi: Pastikan GPS Aktif dan Izinkan Browser mengakses lokasi.";
+        btn.disabled = false; btn.innerText = "Kirim Absensi";
+        msg.style.display = 'block'; msg.className = 'error';
+        msg.innerText = "Gagal Ambil Lokasi: Pastikan GPS Aktif.";
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -171,33 +264,66 @@
     })
     .then(res => res.json())
     .then(res => {
-      btn.disabled = false;
-      btn.innerText = "Kirim Absensi";
-      msg.style.display = 'block';
-      
+      btn.disabled = false; btn.innerText = "Kirim Absensi"; msg.style.display = 'block';
       if(res.ok) {
-        if (res.message.includes("TERLAMBAT")) {
-          msg.className = 'warning';
-        } else {
-          msg.className = 'success';
-        }
+        msg.className = res.message.includes("TERLAMBAT") ? 'warning' : 'success';
         msg.innerText = res.message;
-        // Reset
         document.getElementById('nama').value = '';
         document.getElementById('nis').value = '';
         document.getElementById('ket').value = '';
         document.getElementById('status').value = 'Hadir';
       } else {
-        msg.className = 'error';
-        msg.innerText = res.message;
+        msg.className = 'error'; msg.innerText = res.message;
       }
     })
     .catch(err => {
-      btn.disabled = false;
-      btn.innerText = "Kirim Absensi";
-      msg.style.display = 'block';
-      msg.className = 'error';
-      msg.innerText = "Koneksi Bermasalah.";
+      btn.disabled = false; btn.innerText = "Kirim Absensi";
+      msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Koneksi Bermasalah.";
+    });
+  }
+
+  // --- FITUR BARU: LOAD & CETAK LAPORAN ---
+  function loadLaporan() {
+    const tgl = document.getElementById('tglLaporan').value;
+    if(!tgl) { alert("Pilih tanggal dulu"); return; }
+    
+    const btn = document.getElementById('btnLoadLaporan');
+    const area = document.getElementById('areaLaporan');
+    const tbody = document.querySelector('#tabelLaporan tbody');
+    
+    btn.disabled = true; btn.innerText = "Memuat Data...";
+    area.style.display = 'none';
+    tbody.innerHTML = '';
+
+    fetch(SCRIPT_URL + '?action=getLaporan&tanggal=' + tgl)
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false; btn.innerText = "🔍 Lihat Data";
+      area.style.display = 'block';
+      
+      document.getElementById('infoTotal').innerText = "Total Data: " + data.length;
+
+      if(data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Tidak ada data absensi pada tanggal ini.</td></tr>';
+        return;
+      }
+
+      data.forEach((d, i) => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i+1}</td>
+          <td>${d.waktu}</td>
+          <td>${d.nama}</td>
+          <td>${d.kelas}</td>
+          <td><span class="badge bg-${d.status}">${d.status}</span></td>
+          <td>${d.ket}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(e => {
+      btn.disabled = false; btn.innerText = "🔍 Lihat Data";
+      alert("Gagal memuat laporan.");
     });
   }
 </script>
