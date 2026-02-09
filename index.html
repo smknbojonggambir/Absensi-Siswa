@@ -11,6 +11,10 @@
     .container { width: 100%; max-width: 500px; margin: 0 auto; }
     .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
     
+    /* LOGO STYLE */
+    .logo-container { text-align: center; margin-bottom: 15px; }
+    .logo-img { max-height: 100px; width: auto; }
+
     h1 { margin: 0 0 10px; font-size: 20px; text-align: center; }
     .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; padding: 4px 12px; border-radius: 20px; display: inline-block; width: 100%; box-sizing: border-box; }
     
@@ -22,6 +26,14 @@
     .btn-secondary { background: #4b5563; margin-top: 10px; }
     .btn-print { background: #059669; }
     
+    /* STYLE UNTUK KAMERA */
+    #camera-area { margin-top: 15px; text-align: center; background: #000; border-radius: 10px; overflow: hidden; display: none; position: relative; }
+    video { width: 100%; height: auto; display: block; transform: scaleX(-1); } /* Mirror effect */
+    #canvas { display: none; }
+    #hasil-foto { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 2px solid var(--primary); transform: scaleX(-1); }
+    .btn-cam { margin-top: 5px; background: #f59e0b; }
+    .btn-retake { background: #ef4444; margin-top: 10px; display: none; }
+
     .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
     .nav-btn { background: #e5e7eb; color: #374151; padding: 10px 20px; border-radius: 20px; font-size: 14px; width: auto; margin: 0; }
     .nav-btn.active { background: var(--primary); color: white; }
@@ -56,8 +68,9 @@
       .card { box-shadow: none; border: none; padding: 0; }
       #sectionLaporan { display: block !important; }
       h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; }
-      .subtitle { display: none; } /* Hide default subtitle, use custom report header */
+      .subtitle { display: none; }
       #reportHeader { display: block !important; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
+      .logo-container { display: none; } /* Opsional: sembunyikan logo saat print tabel */
       
       table { border: 1px solid #000; font-size: 11px; width: 100%; }
       th, td { border: 1px solid #000; padding: 4px; color: black; white-space: normal; }
@@ -75,6 +88,10 @@
   </div>
 
   <div class="card">
+    <div class="logo-container">
+        <img src="https://drive.google.com/uc?export=view&id=1MopHaBGxcGbJxBrwVuaxJm4WY64-2WE8" alt="Logo SMKN Bojonggambir" class="logo-img">
+    </div>
+
     <h1>Absensi Siswa</h1>
     <div class="subtitle" id="tanggalDisplay">Memuat Tanggal...</div>
 
@@ -94,9 +111,9 @@
         <input type="text" id="nis" placeholder="Otomatis" readonly>
 
         <label>Status Kehadiran</label>
-        <select id="status">
-          <option value="Hadir">✅ Hadir (Wajib di Sekolah)</option>
-          <option value="Terlambat">⚠️ Terlambat</option>
+        <select id="status" onchange="cekStatusFoto()">
+          <option value="Hadir">✅ Hadir (Wajib Foto)</option>
+          <option value="Terlambat">⚠️ Terlambat (Wajib Foto)</option>
           <option value="Izin">📩 Izin</option>
           <option value="Sakit">🤒 Sakit</option>
         </select>
@@ -104,6 +121,20 @@
         <label>Keterangan</label>
         <textarea id="ket" rows="2" placeholder="Alasan..."></textarea>
 
+        <div id="wrapper-foto">
+            <label>Foto Selfie (Bukti Kehadiran)</label>
+            <button id="btnBukaKamera" class="btn-cam" onclick="bukaKamera()">📷 Buka Kamera</button>
+            
+            <div id="camera-area">
+                <video id="video" playsinline autoplay></video>
+                <canvas id="canvas"></canvas>
+                <button id="btnJepret" onclick="ambilFoto()" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:auto; padding:10px 20px; border-radius:50px; background:white; color:black; border:none; box-shadow:0 2px 10px rgba(0,0,0,0.3);">🔘 JEPRET</button>
+            </div>
+
+            <img id="hasil-foto" src="">
+            <input type="hidden" id="foto-base64">
+            <button id="btnUlang" class="btn-retake" onclick="resetKamera()">🔄 Foto Ulang</button>
+        </div>
         <button id="btnKirim" onclick="cekLokasiDanKirim()">Kirim Absensi</button>
       </form>
       <div id="msg"></div>
@@ -175,10 +206,11 @@
 </div>
 
 <script>
-  // --- GANTI URL INI DENGAN URL DEPLOY TERBARU ---
+  // --- URL DEPLOYMENT GOOGLE SCRIPT ---
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4mVQdOiOdq3ZFT2ZYq9F28U98keQy8poAhJsOlIvUhnqd7YaR4wVTVWzo2jLKEug/exec'; 
 
   let dbSiswa = [];
+  let videoStream = null;
 
   window.onload = function() {
     const today = new Date();
@@ -201,11 +233,10 @@
     if (tab === 'form') {
       formSec.style.display = 'block'; lapSec.style.display = 'none';
       btns[0].classList.add('active'); btns[1].classList.remove('active');
-      document.querySelector('h1').innerText = "Absensi Siswa";
     } else {
+      stopCamera(); // Matikan kamera jika pindah tab
       formSec.style.display = 'none'; lapSec.style.display = 'block';
       btns[0].classList.remove('active'); btns[1].classList.add('active');
-      document.querySelector('h1').innerText = "Laporan Absensi";
     }
   }
 
@@ -226,15 +257,11 @@
     spin.style.display = 'inline-block';
     
     fetch(SCRIPT_URL + '?action=getKelas').then(r=>r.json()).then(data => {
-      // Isi Dropdown Form Absen
       const sel = document.getElementById('kelas');
-      // Isi Dropdown Filter Laporan
       const selLap = document.getElementById('lapKelas');
       
       data.forEach(k => { 
-          // Option untuk form
           let o1 = document.createElement('option'); o1.value=k; o1.textContent=k; sel.appendChild(o1);
-          // Option untuk laporan
           let o2 = document.createElement('option'); o2.value=k; o2.textContent=k; selLap.appendChild(o2);
       });
       spin.style.display = 'none';
@@ -261,15 +288,107 @@
     if(i) document.getElementById('nis').value = i.nis;
   }
 
+  // --- LOGIKA KAMERA ---
+  function cekStatusFoto() {
+    const status = document.getElementById('status').value;
+    const wrap = document.getElementById('wrapper-foto');
+    // Jika Izin atau Sakit, sembunyikan fitur kamera (opsional, bisa ditampilkan terus jika mau)
+    if (status === 'Hadir' || status === 'Terlambat') {
+        wrap.style.display = 'block';
+    } else {
+        wrap.style.display = 'none';
+        stopCamera();
+        document.getElementById('foto-base64').value = ""; // Reset foto jika ganti status
+    }
+  }
+
+  async function bukaKamera() {
+    const video = document.getElementById('video');
+    const camArea = document.getElementById('camera-area');
+    const btnBuka = document.getElementById('btnBukaKamera');
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user' } // Kamera depan
+        });
+        videoStream = stream;
+        video.srcObject = stream;
+        camArea.style.display = 'block';
+        btnBuka.style.display = 'none';
+        document.getElementById('hasil-foto').style.display = 'none';
+        document.getElementById('btnUlang').style.display = 'none';
+    } catch (err) {
+        alert("Gagal membuka kamera: " + err.message);
+    }
+  }
+
+  function ambilFoto() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const hasil = document.getElementById('hasil-foto');
+    const inputBase64 = document.getElementById('foto-base64');
+    
+    if (!videoStream) return;
+
+    // Set ukuran canvas sesuai video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Gambar video ke canvas
+    const ctx = canvas.getContext('2d');
+    // Efek mirror di canvas
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Konversi ke Base64 JPEG
+    const dataFoto = canvas.toDataURL('image/jpeg', 0.7); // Kualitas 0.7
+    
+    hasil.src = dataFoto;
+    hasil.style.display = 'block';
+    inputBase64.value = dataFoto;
+    
+    // Matikan kamera & Tampilkan tombol ulang
+    stopCamera();
+    document.getElementById('camera-area').style.display = 'none';
+    document.getElementById('btnUlang').style.display = 'block';
+  }
+
+  function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+  }
+
+  function resetKamera() {
+    document.getElementById('foto-base64').value = "";
+    document.getElementById('hasil-foto').style.display = 'none';
+    bukaKamera();
+  }
+
   // --- SUBMIT ABSENSI ---
   function cekLokasiDanKirim() {
     const status = document.getElementById('status').value;
     const btn = document.getElementById('btnKirim');
     const msg = document.getElementById('msg');
     const nis = document.getElementById('nis').value;
+    const foto = document.getElementById('foto-base64').value;
 
     if(!nis) { alert("Pilih siswa dulu!"); return; }
-    if (status === 'Izin' || status === 'Sakit') { kirimKeServer({ lat: null, lng: null }); return; }
+    
+    // Validasi Foto untuk Hadir/Terlambat
+    if ((status === 'Hadir' || status === 'Terlambat') && !foto) {
+        alert("Wajib mengambil foto selfie untuk kehadiran!");
+        return;
+    }
+
+    if (status === 'Izin' || status === 'Sakit') { 
+        // Izin/Sakit boleh tanpa lokasi & foto (tergantung kebijakan)
+        // Kita kirim null
+        kirimKeServer({ lat: null, lng: null }); 
+        return; 
+    }
 
     btn.disabled = true; btn.innerText = "Mengambil Lokasi..."; msg.style.display = 'none';
 
@@ -295,7 +414,8 @@
       status: document.getElementById('status').value,
       keterangan: document.getElementById('ket').value,
       lat: lokasi.lat,
-      lng: lokasi.lng
+      lng: lokasi.lng,
+      image: document.getElementById('foto-base64').value // Kirim Data Foto
     };
 
     btn.innerText = "Mengirim Data...";
@@ -307,7 +427,18 @@
       if(res.ok) {
         msg.className = res.message.includes("TERLAMBAT") ? 'warning' : 'success';
         msg.innerText = res.message;
-        document.getElementById('nama').value = ''; document.getElementById('nis').value = ''; document.getElementById('ket').value = ''; document.getElementById('status').value = 'Hadir';
+        
+        // Reset Form
+        document.getElementById('nama').value = ''; 
+        document.getElementById('nis').value = ''; 
+        document.getElementById('ket').value = ''; 
+        document.getElementById('status').value = 'Hadir';
+        document.getElementById('foto-base64').value = '';
+        document.getElementById('hasil-foto').style.display = 'none';
+        document.getElementById('btnBukaKamera').style.display = 'block';
+        document.getElementById('btnUlang').style.display = 'none';
+        cekStatusFoto();
+
       } else {
         msg.className = 'error'; msg.innerText = res.message;
       }
@@ -315,7 +446,7 @@
     .catch(err => { btn.disabled = false; btn.innerText = "Kirim Absensi"; msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Koneksi Error."; });
   }
 
-  // --- LAPORAN FILTER (HARIAN/MINGGUAN/SEMESTER) ---
+  // --- LAPORAN FILTER ---
   function loadLaporan() {
     const kelas = document.getElementById('lapKelas').value;
     const mode = document.getElementById('lapPeriode').value;
