@@ -4,61 +4,193 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <title>Absensi SMKN Bojonggambir</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #2563eb; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; min-height: 90vh; }
-    
-    .container { width: 100%; max-width: 500px; margin: 0 auto; }
-    .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    
-    .logo-container { text-align: center; margin-bottom: 20px; }
-    .logo-img { 
-        max-height: 120px; 
-        max-width: 100%; 
-        width: auto; 
-        display: inline-block;
-        border-radius: 8px; 
+    :root { 
+        --primary: #2563eb; 
+        --primary-dark: #1e40af;
+        --bg: #f3f4f6; 
+        --card: #ffffff; 
+        --text: #1f2937; 
+        --border: #e5e7eb;
     }
     
-    h1 { margin: 0 0 10px; font-size: 20px; text-align: center; }
-    .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; padding: 4px 12px; border-radius: 20px; display: inline-block; width: 100%; box-sizing: border-box; }
+    body { 
+        font-family: 'Inter', sans-serif; 
+        background: var(--bg); 
+        color: var(--text);
+        margin: 0; 
+        padding: 15px; 
+        min-height: 90vh; 
+    }
     
-    label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
-    select, input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+    .container { width: 100%; max-width: 480px; margin: 0 auto; }
     
-    button { width: 100%; margin-top: 15px; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .btn-secondary { background: #4b5563; margin-top: 10px; }
-    .btn-print { background: #059669; }
+    .card { 
+        background: var(--card); 
+        padding: 24px; 
+        border-radius: 20px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        margin-bottom: 20px; 
+        border: 1px solid white;
+    }
     
-    /* KAMERA */
-    #camera-area { margin-top: 15px; text-align: center; background: #000; border-radius: 10px; overflow: hidden; display: none; position: relative; }
-    video { width: 100%; height: auto; display: block; transform: scaleX(-1); }
+    .logo-container { text-align: center; margin-bottom: 15px; }
+    .logo-img { 
+        height: 80px; 
+        width: auto; 
+        border-radius: 10px;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+    
+    h1 { 
+        margin: 0 0 5px; 
+        font-size: 22px; 
+        text-align: center; 
+        font-weight: 700;
+        color: #111827;
+    }
+    
+    .subtitle { 
+        text-align: center; 
+        color: #6b7280; 
+        font-size: 13px; 
+        margin-bottom: 25px; 
+        background: #f3f4f6; 
+        padding: 6px 16px; 
+        border-radius: 99px; 
+        display: table;
+        margin-left: auto; 
+        margin-right: auto;
+    }
+    
+    label { 
+        display: block; 
+        font-weight: 600; 
+        font-size: 14px; 
+        margin: 15px 0 6px; 
+        color: #374151;
+    }
+    
+    select, input, textarea { 
+        width: 100%; 
+        padding: 14px; 
+        border: 1px solid var(--border); 
+        border-radius: 12px; 
+        font-size: 15px; 
+        box-sizing: border-box; 
+        background: #f9fafb;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+    
+    select:focus, input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    button { 
+        width: 100%; 
+        margin-top: 20px; 
+        padding: 16px; 
+        background: var(--primary); 
+        color: white; 
+        border: none; 
+        border-radius: 12px; 
+        font-size: 16px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    }
+    
+    button:active { transform: scale(0.98); }
+    button:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; }
+    
+    .btn-secondary { background: #4b5563; box-shadow: 0 4px 6px -1px rgba(75, 85, 99, 0.3); }
+    .btn-print { background: #059669; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3); margin-top:0; padding: 10px 16px; font-size:14px;}
+    
+    /* KAMERA & FOTO */
+    #wrapper-foto { 
+        background: #f8fafc; 
+        padding: 15px; 
+        border-radius: 12px; 
+        border: 1px dashed #cbd5e1;
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    #camera-area { 
+        margin-top: 10px; 
+        text-align: center; 
+        background: #000; 
+        border-radius: 12px; 
+        overflow: hidden; 
+        display: none; 
+        position: relative; 
+    }
+    
+    video { width: 100%; height: auto; display: block; transform: scaleX(-1); object-fit: cover; }
     #canvas { display: none; }
-    #hasil-foto { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 2px solid var(--primary); transform: scaleX(-1); }
-    .btn-cam { margin-top: 5px; background: #f59e0b; }
-    .btn-retake { background: #ef4444; margin-top: 10px; display: none; }
+    
+    #hasil-foto { 
+        width: 100%; 
+        border-radius: 12px; 
+        margin-top: 10px; 
+        display: none; 
+        border: 2px solid var(--primary); 
+        transform: scaleX(-1); 
+    }
+    
+    .btn-cam { background: #f59e0b; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3); }
+    .btn-retake { background: #ef4444; margin-top: 10px; display: none; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3); }
 
-    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-    .nav-btn { background: #e5e7eb; color: #374151; padding: 10px 20px; border-radius: 20px; font-size: 14px; width: auto; margin: 0; }
-    .nav-btn.active { background: var(--primary); color: white; }
+    /* TAB NAV */
+    .nav-tabs { 
+        background: #e5e7eb; 
+        padding: 4px; 
+        border-radius: 14px; 
+        display: flex; 
+        margin-bottom: 20px; 
+    }
+    .nav-btn { 
+        flex: 1; 
+        padding: 12px; 
+        border-radius: 10px; 
+        font-size: 14px; 
+        font-weight: 500;
+        background: transparent; 
+        color: #6b7280; 
+        margin: 0; 
+        box-shadow: none;
+    }
+    .nav-btn.active { 
+        background: white; 
+        color: var(--primary); 
+        font-weight: 700;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    }
 
     .spinner { display: none; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 5px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 10px; border-radius: 8px; display: none; }
+    
+    #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 12px; border-radius: 8px; display: none; font-weight: 500; }
     .success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
 
-    /* Tables */
-    .table-responsive { overflow-x: auto; margin-top: 15px; }
+    /* TABLES */
+    .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 10px; border: 1px solid #e5e7eb; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; white-space: nowrap; }
-    th { background: #f9fafb; font-weight: 600; }
-    .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .bg-Hadir { background: #d1fae5; color: #065f46; }
-    .bg-Terlambat { background: #fffbeb; color: #b45309; }
-    .bg-Pulang { background: #ede9fe; color: #5b21b6; } /* Warna baru untuk Pulang */
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+    th { background: #f9fafb; font-weight: 600; color: #4b5563; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #f9fafb; }
+    
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .bg-Hadir { background: #dcfce7; color: #166534; }
+    .bg-Pulang { background: #f3e8ff; color: #6b21a8; }
     .bg-Sakit { background: #fee2e2; color: #991b1b; }
     .bg-Izin { background: #e0f2fe; color: #075985; }
 
@@ -71,14 +203,15 @@
       .nav-tabs, #sectionForm, .no-print, .input-area { display: none !important; }
       .card { box-shadow: none; border: none; padding: 0; }
       #sectionLaporan { display: block !important; }
-      h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; }
+      h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; color: black; }
       .subtitle { display: none; }
-      #reportHeader { display: block !important; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
+      #reportHeader { display: block !important; margin-bottom: 15px; font-weight: bold; font-size: 14px; border-bottom: 2px solid black; padding-bottom: 10px; }
       .logo-container { display: block !important; margin-bottom: 10px; }
-      .logo-img { max-height: 80px; }
+      .logo-img { max-height: 80px; filter: none; }
       table { border: 1px solid #000; font-size: 11px; width: 100%; }
-      th, td { border: 1px solid #000; padding: 4px; color: black; white-space: normal; }
+      th, td { border: 1px solid #000; padding: 6px; color: black; white-space: normal; }
       th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+      .badge { border: 1px solid #000; background: none !important; color: black !important; }
     }
   </style>
 </head>
@@ -86,7 +219,7 @@
 
 <div class="container">
   
-  <div class="nav-tabs">
+  <div class="nav-tabs no-print">
     <button class="nav-btn active" onclick="switchTab('form')">📝 Isi Absen</button>
     <button class="nav-btn" onclick="switchTab('laporan')">🖨️ Cetak Laporan</button>
   </div>
@@ -117,35 +250,37 @@
         </select>
 
         <label>NIS</label>
-        <input type="text" id="nis" placeholder="Otomatis" readonly>
+        <input type="text" id="nis" placeholder="Otomatis terisi" readonly style="background: #e5e7eb; cursor: default;">
 
         <label>Status Kehadiran</label>
         <select id="status" onchange="cekStatusFoto()">
           <option value="Hadir">✅ Absen Masuk (Hadir)</option>
-          <option value="Terlambat">⚠️ Absen Masuk (Terlambat)</option>
           <option value="Pulang">🏠 Absen Pulang</option>
           <option value="Izin">📩 Izin</option>
           <option value="Sakit">🤒 Sakit</option>
         </select>
 
-        <label>Keterangan</label>
-        <textarea id="ket" rows="2" placeholder="Alasan..."></textarea>
+        <label>Keterangan (Opsional)</label>
+        <textarea id="ket" rows="2" placeholder="Contoh: Ban bocor, Sakit Demam, dll..."></textarea>
 
         <div id="wrapper-foto">
-            <label>Foto Selfie (Bukti Kehadiran/Pulang)</label>
+            <label style="margin-top:0">Foto Selfie</label>
+            <div style="font-size:12px; color:#6b7280; margin-bottom:10px;">Wajib untuk Masuk & Pulang</div>
+            
             <button id="btnBukaKamera" class="btn-cam" onclick="bukaKamera()">📷 Buka Kamera</button>
             
             <div id="camera-area">
                 <video id="video" playsinline autoplay></video>
                 <canvas id="canvas"></canvas>
-                <button id="btnJepret" onclick="ambilFoto()" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:auto; padding:10px 20px; border-radius:50px; background:white; color:black; border:none; box-shadow:0 2px 10px rgba(0,0,0,0.3);">🔘 JEPRET</button>
+                <button id="btnJepret" onclick="ambilFoto()" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); width:auto; padding:12px 25px; border-radius:50px; background:white; color:black; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); font-weight:bold;">🔘 AMBIL FOTO</button>
             </div>
 
             <img id="hasil-foto" src="">
             <input type="hidden" id="foto-base64">
             <button id="btnUlang" class="btn-retake" onclick="resetKamera()">🔄 Foto Ulang</button>
         </div>
-        <button id="btnKirim" onclick="cekLokasiDanKirim()">Kirim Absensi</button>
+
+        <button id="btnKirim" onclick="cekLokasiDanKirim()">🚀 Kirim Absensi</button>
       </form>
       <div id="msg"></div>
     </div>
@@ -153,6 +288,10 @@
     <div id="sectionLaporan" style="display: none;">
       
       <div class="input-area">
+        <div style="background:#eff6ff; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #bfdbfe; color:#1e40af; font-size:13px;">
+          🔒 Mode Admin Aktif
+        </div>
+
         <label>Filter Kelas:</label>
         <select id="lapKelas">
             <option value="">-- Semua Kelas --</option>
@@ -161,7 +300,7 @@
         <label>Jenis Laporan:</label>
         <select id="lapPeriode" onchange="toggleDateInputs()">
             <option value="harian">Laporan Harian</option>
-            <option value="range">Laporan Berkala</option>
+            <option value="range">Laporan Berkala (Mingguan/Semester)</option>
         </select>
 
         <div id="dateHarian">
@@ -180,29 +319,31 @@
             </div>
         </div>
 
-        <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Lihat Data</button>
+        <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Tampilkan Data</button>
       </div>
       
       <div id="areaLaporan" style="display:none; margin-top:20px;">
         <div id="reportHeader" style="display:none;">
-            Laporan Absensi <span id="printPeriode"></span><br>
-            Kelas: <span id="printKelas"></span>
+            <div style="font-size:16px; text-transform:uppercase;">Laporan Absensi Siswa</div>
+            <div>Periode: <span id="printPeriode"></span></div>
+            <div>Kelas: <span id="printKelas"></span></div>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;" class="no-print">
-            <strong id="infoTotal">Total: 0</strong>
-            <button onclick="window.print()" class="btn-print" style="width:auto; margin:0; padding:8px 16px;">🖨️ Cetak</button>
+            <strong id="infoTotal" style="color:#374151;">Total: 0</strong>
+            <button onclick="window.print()" class="btn-print" style="width:auto;">🖨️ Cetak PDF</button>
         </div>
+        
         <div class="table-responsive">
           <table id="tabelLaporan">
             <thead>
               <tr>
-                <th>No</th>
-                <th>Tgl</th>
-                <th>Nama Siswa</th>
-                <th>Kelas</th>
-                <th>Status</th>
-                <th>Ket</th>
+                <th width="5%">No</th>
+                <th width="20%">Waktu</th>
+                <th width="30%">Nama</th>
+                <th width="15%">Kelas</th>
+                <th width="10%">Status</th>
+                <th width="20%">Ket</th>
               </tr>
             </thead>
             <tbody>
@@ -217,8 +358,8 @@
 
 <script>
   // --- URL DEPLOYMENT GOOGLE SCRIPT ---
-  // Pastikan URL ini sesuai dengan deployment terbaru Anda
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH9OLKl0W6s6BxG1EtdWOCF6JDTrDasqBpVREx0kzWGtivcsx8LaF1AsetG91J6sH-/exec'; 
+  // GANTI URL DI BAWAH INI DENGAN URL DEPLOYMENT TERBARU ANDA
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdT-uh9wOvneO_DbHdHcpoTkxLHh4ncxJjd9RR_cBU3ZwU-b5srP93f0HE2ssek_iW/exec'; 
 
   let dbSiswa = [];
   let videoStream = null;
@@ -236,7 +377,16 @@
     loadDataAwal();
   };
 
+  // --- PASSWORD PROTECTION FOR REPORT TAB ---
   function switchTab(tab) {
+    if (tab === 'laporan') {
+        const pass = prompt("🔐 Masukkan Password Admin untuk akses laporan:");
+        if (pass !== '123456') {
+            alert("❌ Password Salah! Akses ditolak.");
+            return;
+        }
+    }
+
     const formSec = document.getElementById('sectionForm');
     const lapSec = document.getElementById('sectionLaporan');
     const btns = document.querySelectorAll('.nav-btn');
@@ -304,8 +454,8 @@
     const status = document.getElementById('status').value;
     const wrap = document.getElementById('wrapper-foto');
     
-    // Hadir, Terlambat, dan Pulang WAJIB FOTO
-    if (['Hadir', 'Terlambat', 'Pulang'].includes(status)) {
+    // Hadir dan Pulang WAJIB FOTO
+    if (['Hadir', 'Pulang'].includes(status)) {
         wrap.style.display = 'block';
     } else {
         wrap.style.display = 'none';
@@ -350,7 +500,7 @@
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    const dataFoto = canvas.toDataURL('image/jpeg', 0.7); 
+    const dataFoto = canvas.toDataURL('image/jpeg', 0.6); // Kompresi 0.6 agar ringan
     
     hasil.src = dataFoto;
     hasil.style.display = 'block';
@@ -384,27 +534,25 @@
 
     if(!nis) { alert("Pilih siswa dulu!"); return; }
     
-    // Validasi Foto untuk Hadir, Terlambat & Pulang
-    if (['Hadir', 'Terlambat', 'Pulang'].includes(status) && !foto) {
-        alert("Wajib mengambil foto selfie untuk absen Masuk/Pulang!");
+    if (['Hadir', 'Pulang'].includes(status) && !foto) {
+        alert("Wajib mengambil foto selfie!");
         return;
     }
 
-    // Bypass GPS untuk Izin/Sakit
     if (status === 'Izin' || status === 'Sakit') { 
         kirimKeServer({ lat: null, lng: null }); 
         return; 
     }
 
-    btn.disabled = true; btn.innerText = "Mengambil Lokasi..."; msg.style.display = 'none';
+    btn.disabled = true; btn.innerText = "📍 Mengambil Lokasi..."; msg.style.display = 'none';
 
     if (!navigator.geolocation) {
-      btn.disabled = false; btn.innerText = "Kirim Absensi"; alert("Browser tidak support GPS."); return;
+      btn.disabled = false; btn.innerText = "🚀 Kirim Absensi"; alert("Browser tidak support GPS."); return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => { kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
-      (err) => { btn.disabled=false; btn.innerText="Kirim Absensi"; msg.style.display='block'; msg.className='error'; msg.innerText="Gagal GPS. Izinkan lokasi!"; },
+      (err) => { btn.disabled=false; btn.innerText="🚀 Kirim Absensi"; msg.style.display='block'; msg.className='error'; msg.innerText="Gagal GPS. Pastikan GPS HP Aktif!"; },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -424,14 +572,14 @@
       image: document.getElementById('foto-base64').value
     };
 
-    btn.innerText = "Mengirim Data...";
+    btn.innerText = "📤 Mengirim Data...";
 
     fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(res => {
-      btn.disabled = false; btn.innerText = "Kirim Absensi"; msg.style.display = 'block';
+      btn.disabled = false; btn.innerText = "🚀 Kirim Absensi"; msg.style.display = 'block';
       if(res.ok) {
-        msg.className = res.message.includes("TERLAMBAT") ? 'warning' : 'success';
+        msg.className = 'success';
         msg.innerText = res.message;
         
         // Reset Form
@@ -444,12 +592,14 @@
         document.getElementById('btnBukaKamera').style.display = 'block';
         document.getElementById('btnUlang').style.display = 'none';
         cekStatusFoto();
+        // Scroll ke pesan
+        msg.scrollIntoView({ behavior: 'smooth' });
 
       } else {
         msg.className = 'error'; msg.innerText = res.message;
       }
     })
-    .catch(err => { btn.disabled = false; btn.innerText = "Kirim Absensi"; msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Koneksi Error."; });
+    .catch(err => { btn.disabled = false; btn.innerText = "🚀 Kirim Absensi"; msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Gagal Konek Server."; });
   }
 
   // --- LAPORAN FILTER ---
@@ -475,7 +625,7 @@
     const area = document.getElementById('areaLaporan');
     const tbody = document.querySelector('#tabelLaporan tbody');
     
-    btn.disabled = true; btn.innerText = "Memuat...";
+    btn.disabled = true; btn.innerText = "⏳ Memuat...";
     area.style.display = 'none'; tbody.innerHTML = '';
 
     const params = `?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`;
@@ -483,9 +633,9 @@
     fetch(SCRIPT_URL + params)
     .then(r => r.json())
     .then(data => {
-      btn.disabled = false; btn.innerText = "🔍 Lihat Data";
+      btn.disabled = false; btn.innerText = "🔍 Tampilkan Data";
       area.style.display = 'block';
-      document.getElementById('infoTotal').innerText = "Total Data: " + data.length;
+      document.getElementById('infoTotal').innerText = "Total: " + data.length + " Siswa";
 
       const namaKelas = kelas ? kelas : "Semua Kelas";
       const periode = (tglMulai === tglAkhir) ? tglMulai : `${tglMulai} s/d ${tglAkhir}`;
@@ -493,26 +643,32 @@
       document.getElementById('printPeriode').innerText = periode;
 
       if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Tidak ada data.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Belum ada data absensi.</td></tr>';
         return;
       }
 
       data.forEach((d, i) => {
         let tr = document.createElement('tr');
+        // Warna badge berdasarkan status
+        let badgeColor = 'bg-Hadir'; 
+        if(d.status === 'Pulang') badgeColor = 'bg-Pulang';
+        if(d.status === 'Sakit') badgeColor = 'bg-Sakit';
+        if(d.status === 'Izin') badgeColor = 'bg-Izin';
+
         tr.innerHTML = `
           <td>${i+1}</td>
-          <td>${d.tanggal}<br><small>${d.waktu}</small></td>
+          <td>${d.tanggal}<br><small style="color:gray">${d.waktu}</small></td>
           <td>${d.nama}</td>
           <td>${d.kelas}</td>
-          <td><span class="badge bg-${d.status}">${d.status}</span></td>
-          <td>${d.ket}</td>
+          <td><span class="badge ${badgeColor}">${d.status}</span></td>
+          <td style="white-space:normal; font-size:12px;">${d.ket}</td>
         `;
         tbody.appendChild(tr);
       });
     })
     .catch(e => {
-      btn.disabled = false; btn.innerText = "🔍 Lihat Data";
-      alert("Gagal memuat laporan.");
+      btn.disabled = false; btn.innerText = "🔍 Tampilkan Data";
+      alert("Gagal memuat laporan. Periksa koneksi internet.");
     });
   }
 </script>
