@@ -11,25 +11,15 @@
     .container { width: 100%; max-width: 500px; margin: 0 auto; }
     .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
     
-    /* LOGO STYLE DIPERBAIKI */
     .logo-container { text-align: center; margin-bottom: 20px; }
     .logo-img { 
-        max-height: 120px; /* Ukuran maksimal tinggi */
+        max-height: 120px; 
         max-width: 100%; 
         width: auto; 
         display: inline-block;
-        border-radius: 8px; /* Sedikit melengkung di sudut */
+        border-radius: 8px; 
     }
-    /* Fallback jika logo gagal load */
-    .logo-img:after {
-        content: "Logo Tidak Muncul? Cek Izin Drive";
-        display: block;
-        font-size: 12px;
-        color: red;
-        background: #fee2e2;
-        padding: 10px;
-    }
-
+    
     h1 { margin: 0 0 10px; font-size: 20px; text-align: center; }
     .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; padding: 4px 12px; border-radius: 20px; display: inline-block; width: 100%; box-sizing: border-box; }
     
@@ -41,9 +31,9 @@
     .btn-secondary { background: #4b5563; margin-top: 10px; }
     .btn-print { background: #059669; }
     
-    /* STYLE UNTUK KAMERA */
+    /* KAMERA */
     #camera-area { margin-top: 15px; text-align: center; background: #000; border-radius: 10px; overflow: hidden; display: none; position: relative; }
-    video { width: 100%; height: auto; display: block; transform: scaleX(-1); } /* Mirror effect */
+    video { width: 100%; height: auto; display: block; transform: scaleX(-1); }
     #canvas { display: none; }
     #hasil-foto { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 2px solid var(--primary); transform: scaleX(-1); }
     .btn-cam { margin-top: 5px; background: #f59e0b; }
@@ -60,7 +50,7 @@
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     .warning { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
 
-    /* Report Table */
+    /* Tables */
     .table-responsive { overflow-x: auto; margin-top: 15px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; white-space: nowrap; }
@@ -68,14 +58,13 @@
     .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     .bg-Hadir { background: #d1fae5; color: #065f46; }
     .bg-Terlambat { background: #fffbeb; color: #b45309; }
+    .bg-Pulang { background: #ede9fe; color: #5b21b6; } /* Warna baru untuk Pulang */
     .bg-Sakit { background: #fee2e2; color: #991b1b; }
     .bg-Izin { background: #e0f2fe; color: #075985; }
 
-    /* Input Group for Dates */
     .date-group { display: flex; gap: 10px; }
     .date-group div { flex: 1; }
 
-    /* --- PRINT STYLES --- */
     @media print {
       body { background: white; padding: 0; }
       .container { max-width: 100%; width: 100%; margin: 0; }
@@ -85,10 +74,8 @@
       h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; }
       .subtitle { display: none; }
       #reportHeader { display: block !important; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
-      /* Agar logo tetap muncul saat diprint, tapi tidak terlalu besar */
       .logo-container { display: block !important; margin-bottom: 10px; }
       .logo-img { max-height: 80px; }
-      
       table { border: 1px solid #000; font-size: 11px; width: 100%; }
       th, td { border: 1px solid #000; padding: 4px; color: black; white-space: normal; }
       th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
@@ -109,7 +96,7 @@
     <div class="logo-container">
         <img 
             src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj3TeDameAtMCEFEoxqizXlhpRCi_t3q7KHtHppTSGeYC_0U8svn-XRvBRlLXinuFoYt04mCDiZH2j-j9heMEpEuJtAYxmHSl4_DFn0kHtw231Rr7sDWA-eI7NXphlmoJQ6mSJsF_v-zHXXQuLcKFGZ6DLtUG4sahWMgW4s0_Ypm2UOEZG3SUpUu_zX2K8/s320/%E2%80%94Pngtree%E2%80%94school%20icon%20for%20your%20project_4813903.png" 
-            alt="Logo Sekolah (Pastikan Izin Drive: Siapa saja yang memiliki link)" 
+            alt="Logo Sekolah" 
             class="logo-img"
             referrerpolicy="no-referrer"
         >
@@ -134,8 +121,9 @@
 
         <label>Status Kehadiran</label>
         <select id="status" onchange="cekStatusFoto()">
-          <option value="Hadir">✅ Hadir (Wajib Foto)</option>
-          <option value="Terlambat">⚠️ Terlambat (Wajib Foto)</option>
+          <option value="Hadir">✅ Absen Masuk (Hadir)</option>
+          <option value="Terlambat">⚠️ Absen Masuk (Terlambat)</option>
+          <option value="Pulang">🏠 Absen Pulang</option>
           <option value="Izin">📩 Izin</option>
           <option value="Sakit">🤒 Sakit</option>
         </select>
@@ -144,7 +132,7 @@
         <textarea id="ket" rows="2" placeholder="Alasan..."></textarea>
 
         <div id="wrapper-foto">
-            <label>Foto Selfie (Bukti Kehadiran)</label>
+            <label>Foto Selfie (Bukti Kehadiran/Pulang)</label>
             <button id="btnBukaKamera" class="btn-cam" onclick="bukaKamera()">📷 Buka Kamera</button>
             
             <div id="camera-area">
@@ -173,7 +161,7 @@
         <label>Jenis Laporan:</label>
         <select id="lapPeriode" onchange="toggleDateInputs()">
             <option value="harian">Laporan Harian</option>
-            <option value="range">Laporan Berkala (Mingguan/Semester)</option>
+            <option value="range">Laporan Berkala</option>
         </select>
 
         <div id="dateHarian">
@@ -229,6 +217,7 @@
 
 <script>
   // --- URL DEPLOYMENT GOOGLE SCRIPT ---
+  // Pastikan URL ini sesuai dengan deployment terbaru Anda
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdT-uh9wOvneO_DbHdHcpoTkxLHh4ncxJjd9RR_cBU3ZwU-b5srP93f0HE2ssek_iW/exec'; 
 
   let dbSiswa = [];
@@ -310,11 +299,13 @@
     if(i) document.getElementById('nis').value = i.nis;
   }
 
-  // --- LOGIKA KAMERA ---
+  // --- LOGIKA KAMERA & STATUS ---
   function cekStatusFoto() {
     const status = document.getElementById('status').value;
     const wrap = document.getElementById('wrapper-foto');
-    if (status === 'Hadir' || status === 'Terlambat') {
+    
+    // Hadir, Terlambat, dan Pulang WAJIB FOTO
+    if (['Hadir', 'Terlambat', 'Pulang'].includes(status)) {
         wrap.style.display = 'block';
     } else {
         wrap.style.display = 'none';
@@ -393,12 +384,13 @@
 
     if(!nis) { alert("Pilih siswa dulu!"); return; }
     
-    // Validasi Foto
-    if ((status === 'Hadir' || status === 'Terlambat') && !foto) {
-        alert("Wajib mengambil foto selfie untuk kehadiran!");
+    // Validasi Foto untuk Hadir, Terlambat & Pulang
+    if (['Hadir', 'Terlambat', 'Pulang'].includes(status) && !foto) {
+        alert("Wajib mengambil foto selfie untuk absen Masuk/Pulang!");
         return;
     }
 
+    // Bypass GPS untuk Izin/Sakit
     if (status === 'Izin' || status === 'Sakit') { 
         kirimKeServer({ lat: null, lng: null }); 
         return; 
