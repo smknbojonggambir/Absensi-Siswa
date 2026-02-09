@@ -11,9 +11,24 @@
     .container { width: 100%; max-width: 500px; margin: 0 auto; }
     .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
     
-    /* LOGO STYLE */
-    .logo-container { text-align: center; margin-bottom: 15px; }
-    .logo-img { max-height: 100px; width: auto; }
+    /* LOGO STYLE DIPERBAIKI */
+    .logo-container { text-align: center; margin-bottom: 20px; }
+    .logo-img { 
+        max-height: 120px; /* Ukuran maksimal tinggi */
+        max-width: 100%; 
+        width: auto; 
+        display: inline-block;
+        border-radius: 8px; /* Sedikit melengkung di sudut */
+    }
+    /* Fallback jika logo gagal load */
+    .logo-img:after {
+        content: "Logo Tidak Muncul? Cek Izin Drive";
+        display: block;
+        font-size: 12px;
+        color: red;
+        background: #fee2e2;
+        padding: 10px;
+    }
 
     h1 { margin: 0 0 10px; font-size: 20px; text-align: center; }
     .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 20px; background: #eef2ff; padding: 4px 12px; border-radius: 20px; display: inline-block; width: 100%; box-sizing: border-box; }
@@ -70,7 +85,9 @@
       h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; }
       .subtitle { display: none; }
       #reportHeader { display: block !important; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
-      .logo-container { display: none; } /* Opsional: sembunyikan logo saat print tabel */
+      /* Agar logo tetap muncul saat diprint, tapi tidak terlalu besar */
+      .logo-container { display: block !important; margin-bottom: 10px; }
+      .logo-img { max-height: 80px; }
       
       table { border: 1px solid #000; font-size: 11px; width: 100%; }
       th, td { border: 1px solid #000; padding: 4px; color: black; white-space: normal; }
@@ -88,11 +105,16 @@
   </div>
 
   <div class="card">
+    
     <div class="logo-container">
-        <img src="https://drive.google.com/uc?export=view&id=1MopHaBGxcGbJxBrwVuaxJm4WY64-2WE8" alt="Logo SMKN Bojonggambir" class="logo-img">
+        <img 
+            src="https://drive.google.com/uc?export=view&id=1MopHaBGxcGbJxBrwVuaxJm4WY64-2WE8" 
+            alt="Logo Sekolah (Pastikan Izin Drive: Siapa saja yang memiliki link)" 
+            class="logo-img"
+            referrerpolicy="no-referrer"
+        >
     </div>
-
-    <h1>Absensi Siswa</h1>
+    <h1>Absensi SMKN Bojonggambir</h1>
     <div class="subtitle" id="tanggalDisplay">Memuat Tanggal...</div>
 
     <div id="sectionForm">
@@ -207,7 +229,7 @@
 
 <script>
   // --- URL DEPLOYMENT GOOGLE SCRIPT ---
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4mVQdOiOdq3ZFT2ZYq9F28U98keQy8poAhJsOlIvUhnqd7YaR4wVTVWzo2jLKEug/exec'; 
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUWt7k8xO8t4B5g4fj8tXR7z9Fn9HiJAfpEK6LGaeqtFNVqvarqbYu4QqEkGIzJCqk/exec'; 
 
   let dbSiswa = [];
   let videoStream = null;
@@ -234,7 +256,7 @@
       formSec.style.display = 'block'; lapSec.style.display = 'none';
       btns[0].classList.add('active'); btns[1].classList.remove('active');
     } else {
-      stopCamera(); // Matikan kamera jika pindah tab
+      stopCamera(); 
       formSec.style.display = 'none'; lapSec.style.display = 'block';
       btns[0].classList.remove('active'); btns[1].classList.add('active');
     }
@@ -292,13 +314,12 @@
   function cekStatusFoto() {
     const status = document.getElementById('status').value;
     const wrap = document.getElementById('wrapper-foto');
-    // Jika Izin atau Sakit, sembunyikan fitur kamera (opsional, bisa ditampilkan terus jika mau)
     if (status === 'Hadir' || status === 'Terlambat') {
         wrap.style.display = 'block';
     } else {
         wrap.style.display = 'none';
         stopCamera();
-        document.getElementById('foto-base64').value = ""; // Reset foto jika ganti status
+        document.getElementById('foto-base64').value = ""; 
     }
   }
 
@@ -309,7 +330,7 @@
     
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'user' } // Kamera depan
+            video: { facingMode: 'user' } 
         });
         videoStream = stream;
         video.srcObject = stream;
@@ -330,25 +351,20 @@
     
     if (!videoStream) return;
 
-    // Set ukuran canvas sesuai video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Gambar video ke canvas
     const ctx = canvas.getContext('2d');
-    // Efek mirror di canvas
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Konversi ke Base64 JPEG
-    const dataFoto = canvas.toDataURL('image/jpeg', 0.7); // Kualitas 0.7
+    const dataFoto = canvas.toDataURL('image/jpeg', 0.7); 
     
     hasil.src = dataFoto;
     hasil.style.display = 'block';
     inputBase64.value = dataFoto;
     
-    // Matikan kamera & Tampilkan tombol ulang
     stopCamera();
     document.getElementById('camera-area').style.display = 'none';
     document.getElementById('btnUlang').style.display = 'block';
@@ -377,15 +393,13 @@
 
     if(!nis) { alert("Pilih siswa dulu!"); return; }
     
-    // Validasi Foto untuk Hadir/Terlambat
+    // Validasi Foto
     if ((status === 'Hadir' || status === 'Terlambat') && !foto) {
         alert("Wajib mengambil foto selfie untuk kehadiran!");
         return;
     }
 
     if (status === 'Izin' || status === 'Sakit') { 
-        // Izin/Sakit boleh tanpa lokasi & foto (tergantung kebijakan)
-        // Kita kirim null
         kirimKeServer({ lat: null, lng: null }); 
         return; 
     }
@@ -415,7 +429,7 @@
       keterangan: document.getElementById('ket').value,
       lat: lokasi.lat,
       lng: lokasi.lng,
-      image: document.getElementById('foto-base64').value // Kirim Data Foto
+      image: document.getElementById('foto-base64').value
     };
 
     btn.innerText = "Mengirim Data...";
@@ -481,7 +495,6 @@
       area.style.display = 'block';
       document.getElementById('infoTotal').innerText = "Total Data: " + data.length;
 
-      // Update Header Print
       const namaKelas = kelas ? kelas : "Semua Kelas";
       const periode = (tglMulai === tglAkhir) ? tglMulai : `${tglMulai} s/d ${tglAkhir}`;
       document.getElementById('printKelas').innerText = namaKelas;
