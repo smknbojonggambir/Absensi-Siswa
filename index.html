@@ -4,204 +4,402 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <title>Absensi SMKN Bojonggambir</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root { 
-        --primary: #2563eb; 
-        --primary-dark: #1e40af;
-        --bg: #f3f4f6; 
+        --primary: #0f62fe; 
+        --primary-dark: #0043ce;
+        --primary-light: rgba(15, 98, 254, 0.08);
+        --bg: #f4f6fa; 
         --card: #ffffff; 
-        --text: #1f2937; 
-        --border: #e5e7eb;
+        --text: #161616; 
+        --text-muted: #6f6f6f;
+        --border: #e0e0e0;
+        --radius-lg: 24px;
+        --radius-md: 14px;
+        --radius-sm: 8px;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 12px 34px rgba(0, 0, 0, 0.06);
+        --transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    
+    * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
     
     body { 
         font-family: 'Inter', sans-serif; 
-        background: var(--bg); 
+        background: radial-gradient(circle at top right, #eef2f7 0%, var(--bg) 100%); 
         color: var(--text);
         margin: 0; 
-        padding: 15px; 
-        min-height: 90vh; 
+        padding: 20px 15px; 
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
     }
     
-    .container { width: 100%; max-width: 480px; margin: 0 auto; }
+    .container { 
+        width: 100%; 
+        max-width: 480px; 
+        margin: 0 auto; 
+    }
     
     .card { 
         background: var(--card); 
-        padding: 24px; 
-        border-radius: 20px; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-        margin-bottom: 20px; 
-        border: 1px solid white;
+        padding: 32px 28px; 
+        border-radius: var(--radius-lg); 
+        box-shadow: var(--shadow-md); 
+        margin-bottom: 25px; 
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        position: relative;
+    }
+
+    .card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #0f62fe, #39b5ff);
+        border-top-left-radius: var(--radius-lg);
+        border-top-right-radius: var(--radius-lg);
     }
     
-    .logo-container { text-align: center; margin-bottom: 15px; }
+    .logo-container { 
+        text-align: center; 
+        margin-bottom: 20px; 
+    }
+    
     .logo-img { 
-        height: 80px; 
+        height: 76px; 
         width: auto; 
-        border-radius: 10px;
-        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        border-radius: var(--radius-md);
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.06));
+        transition: var(--transition);
+    }
+
+    .logo-img:hover {
+        transform: scale(1.04);
     }
     
     h1 { 
-        margin: 0 0 5px; 
-        font-size: 22px; 
+        margin: 0 0 6px; 
+        font-size: 24px; 
         text-align: center; 
-        font-weight: 700;
-        color: #111827;
+        font-weight: 800;
+        color: #000000;
+        letter-spacing: -0.03em;
     }
     
     .subtitle { 
         text-align: center; 
-        color: #6b7280; 
-        font-size: 13px; 
-        margin-bottom: 25px; 
-        background: #f3f4f6; 
+        color: var(--primary); 
+        font-size: 12px; 
+        font-weight: 700;
+        margin-bottom: 30px; 
+        background: var(--primary-light); 
         padding: 6px 16px; 
         border-radius: 99px; 
         display: table;
         margin-left: auto; 
         margin-right: auto;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
     }
     
     label { 
-        display: block; 
+        display: flex;
+        align-items: center;
         font-weight: 600; 
-        font-size: 14px; 
-        margin: 15px 0 6px; 
-        color: #374151;
+        font-size: 13px; 
+        margin: 20px 0 8px; 
+        color: #393939;
+        letter-spacing: -0.01em;
     }
     
     select, input, textarea { 
         width: 100%; 
-        padding: 14px; 
+        padding: 14px 16px; 
         border: 1px solid var(--border); 
-        border-radius: 12px; 
+        border-radius: var(--radius-md); 
         font-size: 15px; 
-        box-sizing: border-box; 
-        background: #f9fafb;
-        transition: all 0.2s;
+        color: var(--text);
+        background: #f4f4f4;
+        transition: var(--transition);
         font-family: inherit;
+        -webkit-appearance: none;
+    }
+    
+    select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236f6f6f' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+        padding-right: 40px;
     }
     
     select:focus, input:focus, textarea:focus {
         outline: none;
         border-color: var(--primary);
-        background: white;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(15, 98, 254, 0.12);
     }
     
     button { 
         width: 100%; 
-        margin-top: 20px; 
-        padding: 16px; 
+        margin-top: 24px; 
+        padding: 16px 20px; 
         background: var(--primary); 
-        color: white; 
+        color: #ffffff; 
         border: none; 
-        border-radius: 12px; 
-        font-size: 16px; 
-        font-weight: 600; 
+        border-radius: var(--radius-md); 
+        font-size: 15px; 
+        font-weight: 700; 
         cursor: pointer; 
-        transition: 0.2s; 
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        transition: var(--transition); 
+        box-shadow: 0 4px 12px rgba(15, 98, 254, 0.2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        letter-spacing: -0.01em;
     }
     
-    button:active { transform: scale(0.98); }
-    button:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; }
+    button:hover {
+        background: var(--primary-dark);
+        box-shadow: 0 6px 20px rgba(15, 98, 254, 0.3);
+    }
     
-    .btn-secondary { background: #4b5563; box-shadow: 0 4px 6px -1px rgba(75, 85, 99, 0.3); }
-    .btn-print { background: #059669; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3); margin-top:0; padding: 10px 16px; font-size:14px;}
+    button:active { 
+        transform: scale(0.98); 
+    }
+    
+    button:disabled { 
+        background: #c6c6c6; 
+        color: #8d8d8d;
+        cursor: not-allowed; 
+        box-shadow: none; 
+    }
+    
+    .btn-secondary { 
+        background: #262626; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+    }
+    .btn-secondary:hover {
+        background: #000000;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-print { 
+        background: #198038; 
+        box-shadow: 0 4px 10px rgba(25, 128, 56, 0.2); 
+        margin-top: 0; 
+        padding: 10px 18px; 
+        font-size: 13px;
+        width: auto;
+    }
+    .btn-print:hover {
+        background: #0e622b;
+    }
     
     /* KAMERA & FOTO */
     #wrapper-foto { 
-        background: #f8fafc; 
-        padding: 15px; 
-        border-radius: 12px; 
-        border: 1px dashed #cbd5e1;
-        margin-top: 15px;
+        background: #f4f6fa; 
+        padding: 20px; 
+        border-radius: var(--radius-md); 
+        border: 2px dashed #d2d6dc;
+        margin-top: 20px;
         text-align: center;
+        transition: var(--transition);
     }
     
     #camera-area { 
-        margin-top: 10px; 
+        margin-top: 12px; 
         text-align: center; 
-        background: #000; 
-        border-radius: 12px; 
+        background: #161616; 
+        border-radius: var(--radius-md); 
         overflow: hidden; 
         display: none; 
         position: relative; 
+        box-shadow: var(--shadow-sm);
     }
     
-    video { width: 100%; height: auto; display: block; transform: scaleX(-1); object-fit: cover; }
-    #canvas { display: none; }
+    video { 
+        width: 100%; 
+        height: auto; 
+        display: block; 
+        transform: scaleX(-1); 
+        object-fit: cover; 
+    }
+    #canvas { 
+        display: none; 
+    }
     
     #hasil-foto { 
         width: 100%; 
-        border-radius: 12px; 
-        margin-top: 10px; 
+        border-radius: var(--radius-md); 
+        margin-top: 12px; 
         display: none; 
-        border: 2px solid var(--primary); 
+        border: 3px solid var(--primary); 
         transform: scaleX(-1); 
+        box-shadow: var(--shadow-md);
     }
     
-    .btn-cam { background: #f59e0b; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3); }
-    .btn-retake { background: #ef4444; margin-top: 10px; display: none; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3); }
+    .btn-cam { 
+        background: #d57d00; 
+        box-shadow: 0 4px 12px rgba(213, 125, 0, 0.2); 
+    }
+    .btn-cam:hover {
+        background: #b26800;
+    }
+    
+    .btn-retake { 
+        background: #da1e28; 
+        margin-top: 12px; 
+        display: none; 
+        box-shadow: 0 4px 12px rgba(218, 30, 40, 0.2); 
+    }
+    .btn-retake:hover {
+        background: #a2191f;
+    }
 
     /* TAB NAV */
     .nav-tabs { 
-        background: #e5e7eb; 
+        background: #e0e0e0; 
         padding: 4px; 
-        border-radius: 14px; 
+        border-radius: var(--radius-md); 
         display: flex; 
-        margin-bottom: 20px; 
+        margin-bottom: 25px; 
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
     }
     .nav-btn { 
         flex: 1; 
-        padding: 12px; 
-        border-radius: 10px; 
-        font-size: 14px; 
-        font-weight: 500;
+        padding: 12px 8px; 
+        border-radius: calc(var(--radius-md) - 2px); 
+        font-size: 13px; 
+        font-weight: 600;
         background: transparent; 
-        color: #6b7280; 
+        color: #525252; 
         margin: 0; 
         box-shadow: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .nav-btn:hover {
+        color: var(--text);
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.4);
     }
     .nav-btn.active { 
-        background: white; 
+        background: #ffffff; 
         color: var(--primary); 
         font-weight: 700;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        box-shadow: var(--shadow-sm); 
     }
 
-    .spinner { display: none; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 5px; vertical-align: middle; }
+    /* SPINNER & MESSAGES */
+    .spinner { 
+        display: none; 
+        width: 16px; 
+        height: 16px; 
+        border: 2px solid rgba(15, 98, 254, 0.2); 
+        border-top-color: var(--primary); 
+        border-radius: 50%; 
+        animation: spin 0.6s linear infinite; 
+        margin-left: 8px; 
+        display: inline-block;
+        vertical-align: middle; 
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    #msg { margin-top: 16px; text-align: center; font-size: 14px; padding: 12px; border-radius: 8px; display: none; font-weight: 500; }
-    .success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-    .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    #msg { 
+        margin-top: 20px; 
+        text-align: center; 
+        font-size: 14px; 
+        padding: 14px 16px; 
+        border-radius: var(--radius-md); 
+        display: none; 
+        font-weight: 600; 
+        line-height: 1.4;
+    }
+    .success { 
+        background: #def8e9; 
+        color: #135e2e; 
+        border: 1px solid #b4eec8; 
+    }
+    .error { 
+        background: #fff0f1; 
+        color: #a51d24; 
+        border: 1px solid #ffd0d3; 
+    }
 
     /* TABLES */
-    .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 10px; border: 1px solid #e5e7eb; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-    th { background: #f9fafb; font-weight: 600; color: #4b5563; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover { background: #f9fafb; }
+    .table-responsive { 
+        overflow-x: auto; 
+        margin-top: 20px; 
+        border-radius: var(--radius-md); 
+        border: 1px solid var(--border); 
+        box-shadow: var(--shadow-sm);
+    }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        font-size: 13px; 
+        background: #ffffff;
+    }
+    th, td { 
+        padding: 14px 16px; 
+        text-align: left; 
+        border-bottom: 1px solid var(--border); 
+        white-space: nowrap; 
+    }
+    th { 
+        background: #f4f4f4; 
+        font-weight: 700; 
+        color: #393939; 
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.03em;
+    }
+    tr:last-child td { 
+        border-bottom: none; 
+    }
+    tr:hover td { 
+        background: #fcfcfc; 
+    }
     
-    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-    .bg-Hadir { background: #dcfce7; color: #166534; }
-    .bg-Pulang { background: #f3e8ff; color: #6b21a8; }
-    .bg-Sakit { background: #fee2e2; color: #991b1b; }
-    .bg-Izin { background: #e0f2fe; color: #075985; }
+    .badge { 
+        padding: 5px 10px; 
+        border-radius: var(--radius-sm); 
+        font-size: 11px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 0.02em;
+        display: inline-block;
+    }
+    .bg-Hadir { background: #e2f6ea; color: #135e2e; }
+    .bg-Pulang { background: #f2f0ff; color: #6929c4; }
+    .bg-Sakit { background: #fff0f1; color: #a51d24; }
+    .bg-Izin { background: #e8f5ff; color: #0043ce; }
 
-    .date-group { display: flex; gap: 10px; }
-    .date-group div { flex: 1; }
+    .date-group { 
+        display: flex; 
+        gap: 12px; 
+    }
+    .date-group div { 
+        flex: 1; 
+    }
 
     @media print {
       body { background: white; padding: 0; }
       .container { max-width: 100%; width: 100%; margin: 0; }
       .nav-tabs, #sectionForm, .no-print, .input-area { display: none !important; }
       .card { box-shadow: none; border: none; padding: 0; }
+      .card::before { display: none; }
       #sectionLaporan { display: block !important; }
       h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; color: black; }
       .subtitle { display: none; }
@@ -221,7 +419,7 @@
   
   <div class="nav-tabs no-print">
     <button class="nav-btn active" onclick="switchTab('form')">📝 Isi Absen</button>
-    <button class="nav-btn" onclick="switchTab('laporan')">🖨️ Cetak Laporan</button>
+    <button class="nav-btn" onclick="switchTab('laporan')">🖨️ Laporan</button>
   </div>
 
   <div class="card">
@@ -239,18 +437,18 @@
 
     <div id="sectionForm">
       <form onsubmit="return false">
-        <label>Kelas <span id="loadKelas" class="spinner"></span></label>
+        <label>Kelas <span id="loadKelas" class="spinner" style="display:none;"></span></label>
         <select id="kelas" onchange="loadSiswa()">
           <option value="">-- Pilih Kelas --</option>
         </select>
 
-        <label>Nama Siswa <span id="loadSiswa" class="spinner"></span></label>
+        <label>Nama Siswa <span id="loadSiswa" class="spinner" style="display:none;"></span></label>
         <select id="nama" onchange="setNIS()" disabled>
           <option value="">-- Pilih Kelas Dulu --</option>
         </select>
 
         <label>NIS</label>
-        <input type="text" id="nis" placeholder="Otomatis terisi" readonly style="background: #e5e7eb; cursor: default;">
+        <input type="text" id="nis" placeholder="Otomatis terisi" readonly style="background: #e0e0e0; cursor: default; color: #525252;">
 
         <label>Status Kehadiran</label>
         <select id="status" onchange="cekStatusFoto()">
@@ -264,15 +462,15 @@
         <textarea id="ket" rows="2" placeholder="Contoh: Ban bocor, Sakit Demam, dll..."></textarea>
 
         <div id="wrapper-foto">
-            <label style="margin-top:0">Foto Selfie</label>
-            <div style="font-size:12px; color:#6b7280; margin-bottom:10px;">Wajib untuk Masuk & Pulang</div>
+            <label style="margin-top:0; justify-content:center; font-size:14px;">Foto Selfie</label>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px; font-weight:500;">Wajib untuk Masuk & Pulang</div>
             
             <button id="btnBukaKamera" class="btn-cam" onclick="bukaKamera()">📷 Buka Kamera</button>
             
             <div id="camera-area">
                 <video id="video" playsinline autoplay></video>
                 <canvas id="canvas"></canvas>
-                <button id="btnJepret" onclick="ambilFoto()" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); width:auto; padding:12px 25px; border-radius:50px; background:white; color:black; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); font-weight:bold;">🔘 AMBIL FOTO</button>
+                <button id="btnJepret" onclick="ambilFoto()" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); width:auto; padding:12px 24px; border-radius:50px; background:#ffffff; color:#000000; border:none; box-shadow:0 8px 24px rgba(0,0,0,0.3); font-weight:700; font-size:13px; letter-spacing:0.03em;">🔘 AMBIL FOTO</button>
             </div>
 
             <img id="hasil-foto" src="">
@@ -288,7 +486,7 @@
     <div id="sectionLaporan" style="display: none;">
       
       <div class="input-area">
-        <div style="background:#eff6ff; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #bfdbfe; color:#1e40af; font-size:13px;">
+        <div style="background:var(--primary-light); padding:12px 16px; border-radius:var(--radius-md); margin-bottom:20px; border:1px solid rgba(15, 98, 254, 0.15); color:var(--primary); font-size:13px; font-weight:600; display:flex; align-items:center;">
           🔒 Mode Admin Aktif
         </div>
 
@@ -322,16 +520,16 @@
         <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Tampilkan Data</button>
       </div>
       
-      <div id="areaLaporan" style="display:none; margin-top:20px;">
+      <div id="areaLaporan" style="display:none; margin-top:25px;">
         <div id="reportHeader" style="display:none;">
             <div style="font-size:16px; text-transform:uppercase;">Laporan Absensi Siswa</div>
             <div>Periode: <span id="printPeriode"></span></div>
             <div>Kelas: <span id="printKelas"></span></div>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;" class="no-print">
-            <strong id="infoTotal" style="color:#374151;">Total: 0</strong>
-            <button onclick="window.print()" class="btn-print" style="width:auto;">🖨️ Cetak PDF</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
+            <strong id="infoTotal" style="color:#161616; font-size:14px; font-weight:700;">Total: 0</strong>
+            <button onclick="window.print()" class="btn-print">🖨️ Cetak PDF</button>
         </div>
         
         <div class="table-responsive">
