@@ -45,7 +45,6 @@
         overflow-x: hidden;
     }
 
-    /* LANGUAGE TOGGLE SYSTEM */
     body.lang-id .en { display: none !important; }
     body.lang-en .id { display: none !important; }
     
@@ -56,7 +55,6 @@
         position: relative;
     }
 
-    /* TOP HEADER APP STYLE */
     .app-header {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         padding: 30px 20px 80px;
@@ -129,7 +127,6 @@
         margin-top: 4px;
     }
 
-    /* FLOATING DECORATIONS (LIGHTWEIGHT) */
     .deco {
         position: absolute;
         font-size: 28px;
@@ -148,7 +145,6 @@
         100% { transform: translateY(0px) rotate(0deg); }
     }
 
-    /* MAIN CARD */
     .main-content {
         padding: 0 16px;
         margin-top: -50px;
@@ -164,7 +160,6 @@
         margin-bottom: 25px; 
     }
 
-    /* CAPSULE NAVIGATION TABS */
     .nav-tabs { 
         background: #f1f5f9; 
         padding: 6px; 
@@ -190,7 +185,6 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
     }
 
-    /* ANNOUNCEMENT COMPONENT */
     .announcement-box {
         background: var(--primary-light);
         border: 1px solid rgba(37, 99, 235, 0.2);
@@ -266,7 +260,6 @@
     
     .btn-secondary { background: var(--text); box-shadow: 0 6px 16px rgba(30, 41, 59, 0.2); }
     
-    /* CAMERA AREA */
     #wrapper-foto { 
         background: #f8fafc; 
         padding: 16px; 
@@ -301,7 +294,6 @@
     }
     .btn-retake { background: #ef4444; margin-top: 10px; display: none; box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25); }
 
-    /* MESSAGES & SPINNER */
     .spinner { 
         display: none; width: 14px; height: 14px; border: 2px solid rgba(37,99,235, 0.2); 
         border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; 
@@ -309,11 +301,11 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    #msg { margin-top: 20px; text-align: center; font-size: 13px; padding: 14px; border-radius: var(--radius-md); display: none; font-weight: 600; }
+    #msg { margin-top: 20px; text-align: center; font-size: 13px; padding: 14px; border-radius: var(--radius-md); display: none; font-weight: 600; line-height: 1.5; }
     .success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
     .error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .warning { background: #fefce8; color: #a16207; border: 1px solid #fde047; } /* Kuning untuk terlambat */
 
-    /* TABLES UPGRADE */
     .table-responsive { overflow-x: auto; margin-top: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 12px; background: #ffffff; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -328,7 +320,6 @@
     .date-group { display: flex; gap: 10px; }
     .date-group div { flex: 1; }
 
-    /* STATUS OPTION COLORS (To match Masuk Hijau, Pulang Orange) */
     select#status option[value="Hadir"] { color: var(--secondary-green); font-weight: bold; }
     select#status option[value="Pulang"] { color: var(--secondary-orange); font-weight: bold; }
 
@@ -351,13 +342,11 @@
 
 <div class="container">
   
-  <!-- DECORATIVE EMOJIS (LIGHTWEIGHT IMAGES) -->
   <div class="deco book">📚</div>
   <div class="deco clock">⏰</div>
   <div class="deco bag">🎒</div>
   <div class="deco calc">🧮</div>
 
-  <!-- HEADER -->
   <div class="app-header no-print">
     <div class="top-bar">
         <button class="lang-toggle" onclick="toggleLang()">
@@ -389,18 +378,16 @@
         </button>
       </div>
 
-      <!-- BOX PENGUMUMAN / ANNOUNCEMENT -->
       <div class="announcement-box no-print">
         <div style="font-size: 20px;">📢</div>
         <div class="announcement-text id">
-          <strong>Perhatian:</strong> Aktifkan Lokasi (GPS) dan Kamera ponsel Anda untuk merekam presensi sekolah.
+          <strong>Perhatian:</strong> Aktifkan Lokasi dan Kamera untuk absen. Jam masuk adalah maksimal pukul <strong>07:00</strong>.
         </div>
         <div class="announcement-text en">
-            <strong>Attention:</strong> Please enable Location (GPS) and Camera to record your school attendance.
+            <strong>Attention:</strong> Enable Location and Camera. The check-in deadline is <strong>07:00 AM</strong>.
         </div>
       </div>
 
-      <!-- SECTION FORM -->
       <div id="sectionForm">
         <form onsubmit="return false">
           
@@ -467,7 +454,6 @@
         <div id="msg"></div>
       </div>
 
-      <!-- SECTION LAPORAN -->
       <div id="sectionLaporan" style="display: none;">
         <div class="input-area">
           <div style="background:var(--primary-light); padding:10px 14px; border-radius:10px; margin-bottom:16px; border:1px solid rgba(37,99,235, 0.15); color:var(--primary); font-size:12px; font-weight:600; display:flex; align-items:center;">
@@ -547,7 +533,23 @@
 </div>
 
 <script>
-  // --- FUNGSI DUA BAHASA (ID & EN) ---
+  // --- KONFIGURASI JAM MASUK (Batas Keterlambatan) ---
+  const BATAS_JAM_MASUK = "07:00"; 
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyy99RLpALvgwpH-lW4JRmDcLdw-1mTcE7U953adq16sdgXzHNK0F_iO-DtKNIW36Fu/exec'; 
+
+  let dbSiswa = [];
+  let videoStream = null;
+
+  window.onload = function() {
+    setTanggalDisplay();
+    const today = new Date();
+    const yyyymmdd = today.toISOString().split('T')[0];
+    document.getElementById('tglHarian').value = yyyymmdd;
+    document.getElementById('tglMulai').value = yyyymmdd;
+    document.getElementById('tglSelesai').value = yyyymmdd;
+    loadDataAwal();
+  };
+
   function toggleLang() {
       const body = document.body;
       if(body.classList.contains('lang-id')) {
@@ -565,42 +567,36 @@
       document.getElementById('tanggalDisplayEN').innerText = today.toLocaleDateString('en-US', options);
   }
 
-  // --- URL DEPLOYMENT GOOGLE SCRIPT ---
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyy99RLpALvgwpH-lW4JRmDcLdw-1mTcE7U953adq16sdgXzHNK0F_iO-DtKNIW36Fu/exec'; 
+  // --- FITUR SUARA (Text-to-Speech) ---
+  function playVoice(text, isEn) {
+      if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = isEn ? 'en-US' : 'id-ID';
+          utterance.rate = 0.9; // Kecepatan bicara sedikit diperlambat agar jelas
+          window.speechSynthesis.speak(utterance);
+      }
+  }
 
-  let dbSiswa = [];
-  let videoStream = null;
+  // --- CEK KETERLAMBATAN ---
+  function cekApakahTerlambat() {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2, '0');
+      const m = now.getMinutes().toString().padStart(2, '0');
+      const currentTime = `${h}:${m}`;
+      return currentTime > BATAS_JAM_MASUK;
+  }
 
-  window.onload = function() {
-    setTanggalDisplay();
-    
-    // Set default dates
-    const today = new Date();
-    const yyyymmdd = today.toISOString().split('T')[0];
-    document.getElementById('tglHarian').value = yyyymmdd;
-    document.getElementById('tglMulai').value = yyyymmdd;
-    document.getElementById('tglSelesai').value = yyyymmdd;
-
-    loadDataAwal();
-  };
-
-  // --- PASSWORD PROTECTION FOR REPORT TAB ---
   function switchTab(tab) {
     const isEn = document.body.classList.contains('lang-en');
-
     if (tab === 'laporan') {
-        const promptMsg = isEn ? "🔐 Enter Admin Password to access reports:" : "🔐 Masukkan Password Admin untuk akses laporan:";
-        const pass = prompt(promptMsg);
+        const pass = prompt(isEn ? "🔐 Enter Admin Password:" : "🔐 Masukkan Password Admin:");
         if (pass !== '123456') {
-            alert(isEn ? "❌ Wrong Password! Access denied." : "❌ Password Salah! Akses ditolak.");
-            return;
+            alert(isEn ? "❌ Wrong Password!" : "❌ Password Salah!"); return;
         }
     }
-
     const formSec = document.getElementById('sectionForm');
     const lapSec = document.getElementById('sectionLaporan');
     const btns = document.querySelectorAll('.nav-btn');
-    
     if (tab === 'form') {
       formSec.style.display = 'block'; lapSec.style.display = 'none';
       btns[0].classList.add('active'); btns[1].classList.remove('active');
@@ -613,33 +609,22 @@
 
   function toggleDateInputs() {
     const mode = document.getElementById('lapPeriode').value;
-    if (mode === 'harian') {
-        document.getElementById('dateHarian').style.display = 'block';
-        document.getElementById('dateRange').style.display = 'none';
-    } else {
-        document.getElementById('dateHarian').style.display = 'none';
-        document.getElementById('dateRange').style.display = 'flex';
-    }
+    document.getElementById('dateHarian').style.display = (mode === 'harian') ? 'block' : 'none';
+    document.getElementById('dateRange').style.display = (mode === 'range') ? 'flex' : 'none';
   }
 
-  // --- DATA LOADING ---
   function loadDataAwal() {
     const spin = document.getElementById('loadKelas');
     spin.style.display = 'inline-block';
-    
     fetch(SCRIPT_URL + '?action=getKelas').then(r=>r.json()).then(data => {
       const sel = document.getElementById('kelas');
       const selLap = document.getElementById('lapKelas');
-      
       data.forEach(k => { 
           let o1 = document.createElement('option'); o1.value=k; o1.textContent=k; sel.appendChild(o1);
           let o2 = document.createElement('option'); o2.value=k; o2.textContent=k; selLap.appendChild(o2);
       });
       spin.style.display = 'none';
-    }).catch(e => { 
-        alert('Failed to load class / Gagal memuat kelas'); 
-        spin.style.display = 'none'; 
-    });
+    }).catch(e => { alert('Failed to load class'); spin.style.display = 'none'; });
   }
 
   function loadSiswa() {
@@ -647,14 +632,10 @@
     const n = document.getElementById('nama');
     const s = document.getElementById('loadSiswa');
     const isEn = document.body.classList.contains('lang-en');
-
     n.innerHTML = `<option>${isEn ? 'Loading...' : 'Memuat...'}</option>`; 
-    n.disabled=true; 
-    document.getElementById('nis').value='';
-    
+    n.disabled=true; document.getElementById('nis').value='';
     if(!k) return;
     s.style.display = 'inline-block';
-    
     fetch(SCRIPT_URL + '?action=getSiswa&kelas=' + encodeURIComponent(k)).then(r=>r.json()).then(data => {
       dbSiswa = data; 
       n.innerHTML = `<option value="">-- ${isEn ? 'Select Name' : 'Pilih Nama'} --</option>`;
@@ -669,81 +650,49 @@
     if(i) document.getElementById('nis').value = i.nis;
   }
 
-  // --- LOGIKA KAMERA & STATUS ---
   function cekStatusFoto() {
     const status = document.getElementById('status').value;
     const wrap = document.getElementById('wrapper-foto');
-    
     if (['Hadir', 'Pulang'].includes(status)) {
         wrap.style.display = 'block';
     } else {
-        wrap.style.display = 'none';
-        stopCamera();
-        document.getElementById('foto-base64').value = ""; 
+        wrap.style.display = 'none'; stopCamera(); document.getElementById('foto-base64').value = ""; 
     }
   }
 
   async function bukaKamera() {
     const video = document.getElementById('video');
-    const camArea = document.getElementById('camera-area');
-    const btnBuka = document.getElementById('btnBukaKamera');
-    
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'user' } 
-        });
-        videoStream = stream;
-        video.srcObject = stream;
-        camArea.style.display = 'block';
-        btnBuka.style.display = 'none';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        videoStream = stream; video.srcObject = stream;
+        document.getElementById('camera-area').style.display = 'block';
+        document.getElementById('btnBukaKamera').style.display = 'none';
         document.getElementById('hasil-foto').style.display = 'none';
         document.getElementById('btnUlang').style.display = 'none';
-    } catch (err) {
-        alert("Gagal membuka kamera / Failed to open camera: " + err.message);
-    }
+    } catch (err) { alert("Gagal membuka kamera: " + err.message); }
   }
 
   function ambilFoto() {
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    const hasil = document.getElementById('hasil-foto');
-    const inputBase64 = document.getElementById('foto-base64');
-    
     if (!videoStream) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
     const dataFoto = canvas.toDataURL('image/jpeg', 0.6); 
-    
-    hasil.src = dataFoto;
-    hasil.style.display = 'block';
-    inputBase64.value = dataFoto;
-    
+    document.getElementById('hasil-foto').src = dataFoto;
+    document.getElementById('hasil-foto').style.display = 'block';
+    document.getElementById('foto-base64').value = dataFoto;
     stopCamera();
     document.getElementById('camera-area').style.display = 'none';
     document.getElementById('btnUlang').style.display = 'block';
   }
 
-  function stopCamera() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-    }
-  }
+  function stopCamera() { if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; } }
+  function resetKamera() { document.getElementById('foto-base64').value = ""; document.getElementById('hasil-foto').style.display = 'none'; bukaKamera(); }
 
-  function resetKamera() {
-    document.getElementById('foto-base64').value = "";
-    document.getElementById('hasil-foto').style.display = 'none';
-    bukaKamera();
-  }
-
-  // --- SUBMIT ABSENSI ---
+  // --- MODIFIKASI PENGIRIMAN DATA (TERLAMBAT & SUARA) ---
   function cekLokasiDanKirim() {
     const status = document.getElementById('status').value;
     const btn = document.getElementById('btnKirim');
@@ -753,36 +702,19 @@
     const isEn = document.body.classList.contains('lang-en');
 
     if(!nis) { alert(isEn ? "Select student first!" : "Pilih siswa dulu!"); return; }
-    
-    if (['Hadir', 'Pulang'].includes(status) && !foto) {
-        alert(isEn ? "Selfie photo is required!" : "Wajib mengambil foto selfie!");
-        return;
-    }
+    if (['Hadir', 'Pulang'].includes(status) && !foto) { alert(isEn ? "Selfie photo is required!" : "Wajib mengambil foto selfie!"); return; }
+    if (status === 'Izin' || status === 'Sakit') { kirimKeServer({ lat: null, lng: null }); return; }
 
-    if (status === 'Izin' || status === 'Sakit') { 
-        kirimKeServer({ lat: null, lng: null }); 
-        return; 
-    }
-
-    btn.disabled = true; 
-    btn.innerHTML = isEn ? "📍 Getting Location..." : "📍 Mengambil Lokasi..."; 
-    msg.style.display = 'none';
-
+    btn.disabled = true; btn.innerHTML = isEn ? "📍 Getting Location..." : "📍 Mengambil Lokasi..."; msg.style.display = 'none';
     if (!navigator.geolocation) {
-      btn.disabled = false; 
-      btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
-      alert(isEn ? "Browser does not support GPS." : "Browser tidak support GPS."); 
-      return;
+      btn.disabled = false; btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; alert("Browser tidak support GPS."); return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => { kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
       (err) => { 
-          btn.disabled=false; 
-          btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
-          msg.style.display='block'; 
-          msg.className='error'; 
-          msg.innerText = isEn ? "GPS Failed. Make sure location is turned on!" : "Gagal GPS. Pastikan GPS HP Aktif!"; 
+          btn.disabled=false; btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+          msg.style.display='block'; msg.className='error'; msg.innerText = isEn ? "GPS Failed!" : "Gagal GPS. Pastikan GPS HP Aktif!"; 
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -793,12 +725,30 @@
     const msg = document.getElementById('msg');
     const isEn = document.body.classList.contains('lang-en');
     
+    const status = document.getElementById('status').value;
+    const nama = document.getElementById('nama').value;
+    let ket = document.getElementById('ket').value;
+
+    let isLate = false;
+    let lateUIMessage = "";
+
+    // Logika jika absen "Hadir" dan melampaui jam 07:00
+    if (status === 'Hadir') {
+        isLate = cekApakahTerlambat();
+        if (isLate) {
+            ket = ket ? ket + " [TERLAMBAT]" : "[TERLAMBAT]";
+            lateUIMessage = isEn ? "<br><br>⚠️ <b>ATTENTION: You are LATE.</b>" : "<br><br>⚠️ <b>PERHATIAN: Anda TERLAMBAT.</b>";
+        } else {
+            lateUIMessage = isEn ? "<br><br>✅ <b>Great! You are On Time.</b>" : "<br><br>✅ <b>Bagus! Anda Tepat Waktu.</b>";
+        }
+    }
+
     const payload = {
       nis: document.getElementById('nis').value,
-      nama: document.getElementById('nama').value,
+      nama: nama,
       kelas: document.getElementById('kelas').value,
-      status: document.getElementById('status').value,
-      keterangan: document.getElementById('ket').value,
+      status: status,
+      keterangan: ket,
       lat: lokasi.lat,
       lng: lokasi.lng,
       image: document.getElementById('foto-base64').value
@@ -809,12 +759,27 @@
     fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(res => {
-      btn.disabled = false; 
-      btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+      btn.disabled = false; btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
       msg.style.display = 'block';
       if(res.ok) {
-        msg.className = 'success';
-        msg.innerText = res.message; // From Google Apps Script
+        // Atur warna notifikasi (Hijau jika sukses, Kuning jika sukses tapi terlambat)
+        msg.className = (isLate && status === 'Hadir') ? 'warning' : 'success';
+        msg.innerHTML = res.message + lateUIMessage; 
+
+        // Mainkan Suara (Voice Announcement)
+        let textSuara = "";
+        if (status === 'Hadir') {
+            if (isLate) {
+                textSuara = isEn ? `Attendance successful, but you are late, ${nama}` : `Absen masuk berhasil, namun Anda terlambat, ${nama}`;
+            } else {
+                textSuara = isEn ? `Attendance successful. Have a good study, ${nama}` : `Absen masuk berhasil. Selamat belajar, ${nama}`;
+            }
+        } else if (status === 'Pulang') {
+            textSuara = isEn ? `Check out successful. Have a safe trip home, ${nama}` : `Absen pulang berhasil. Hati-hati di jalan, ${nama}`;
+        } else {
+            textSuara = isEn ? `Attendance successful, ${nama}` : `Absensi berhasil, ${nama}`;
+        }
+        playVoice(textSuara, isEn);
         
         // Reset Form
         document.getElementById('nama').value = ''; 
@@ -829,61 +794,47 @@
         msg.scrollIntoView({ behavior: 'smooth' });
 
       } else {
-        msg.className = 'error'; msg.innerText = res.message;
+        msg.className = 'error'; msg.innerHTML = res.message;
       }
     })
     .catch(err => { 
-        btn.disabled = false; 
-        btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
-        msg.style.display = 'block'; msg.className = 'error'; 
-        msg.innerText = isEn ? "Server Connection Failed." : "Gagal Konek Server."; 
+        btn.disabled = false; btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+        msg.style.display = 'block'; msg.className = 'error'; msg.innerHTML = isEn ? "Server Connection Failed." : "Gagal Konek Server."; 
     });
   }
 
-  // --- LAPORAN FILTER ---
   function loadLaporan() {
     const kelas = document.getElementById('lapKelas').value;
     const mode = document.getElementById('lapPeriode').value;
     const isEn = document.body.classList.contains('lang-en');
-    
     let tglMulai, tglAkhir;
 
     if (mode === 'harian') {
         const tgl = document.getElementById('tglHarian').value;
-        if(!tgl) { alert(isEn ? "Select date!" : "Pilih tanggal!"); return; }
-        tglMulai = tgl;
-        tglAkhir = tgl;
+        if(!tgl) { alert("Pilih tanggal!"); return; }
+        tglMulai = tgl; tglAkhir = tgl;
     } else {
-        tglMulai = document.getElementById('tglMulai').value;
-        tglAkhir = document.getElementById('tglSelesai').value;
-        if(!tglMulai || !tglAkhir) { alert(isEn ? "Select start and end dates!" : "Pilih tanggal mulai dan sampai!"); return; }
-        if(tglMulai > tglAkhir) { alert(isEn ? "Start date cannot be greater than end date!" : "Tanggal mulai tidak boleh lebih besar dari selesai!"); return; }
+        tglMulai = document.getElementById('tglMulai').value; tglAkhir = document.getElementById('tglSelesai').value;
+        if(!tglMulai || !tglAkhir) { alert("Pilih tanggal!"); return; }
     }
     
     const btn = document.getElementById('btnLoadLaporan');
     const area = document.getElementById('areaLaporan');
     const tbody = document.querySelector('#tabelLaporan tbody');
     
-    btn.disabled = true; btn.innerHTML = isEn ? "⏳ Loading..." : "⏳ Memuat...";
-    area.style.display = 'none'; tbody.innerHTML = '';
+    btn.disabled = true; btn.innerHTML = "⏳ Memuat..."; area.style.display = 'none'; tbody.innerHTML = '';
 
-    const params = `?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`;
-
-    fetch(SCRIPT_URL + params)
+    fetch(SCRIPT_URL + `?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`)
     .then(r => r.json())
     .then(data => {
       btn.disabled = false; btn.innerHTML = isEn ? "🔍 Show Data" : "🔍 Tampilkan Data";
       area.style.display = 'block';
       document.getElementById('infoTotal').innerText = isEn ? `Total: ${data.length} Students` : `Total: ${data.length} Siswa`;
-
-      const namaKelas = kelas ? kelas : (isEn ? "All Classes" : "Semua Kelas");
-      const periode = (tglMulai === tglAkhir) ? tglMulai : `${tglMulai} s/d ${tglAkhir}`;
-      document.getElementById('printKelas').innerText = namaKelas;
-      document.getElementById('printPeriode').innerText = periode;
+      document.getElementById('printKelas').innerText = kelas || "Semua Kelas";
+      document.getElementById('printPeriode').innerText = (tglMulai === tglAkhir) ? tglMulai : `${tglMulai} s/d ${tglAkhir}`;
 
       if(data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">${isEn ? 'No attendance data yet.' : 'Belum ada data absensi.'}</td></tr>`;
-        return;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Belum ada data absensi.</td></tr>`; return;
       }
 
       data.forEach((d, i) => {
@@ -893,20 +844,24 @@
         if(d.status === 'Sakit') badgeColor = 'bg-Sakit';
         if(d.status === 'Izin') badgeColor = 'bg-Izin';
 
+        // Beri style merah pada teks keterangan jika ada kata "[TERLAMBAT]"
+        let ketHtml = d.ket;
+        if (ketHtml.includes("[TERLAMBAT]")) {
+            ketHtml = ketHtml.replace("[TERLAMBAT]", "<strong style='color:#dc2626;'>[TERLAMBAT]</strong>");
+        }
+
         tr.innerHTML = `
           <td>${i+1}</td>
           <td>${d.tanggal}<br><small style="color:gray">${d.waktu}</small></td>
           <td style="font-weight:600;">${d.nama}</td>
           <td>${d.kelas}</td>
           <td><span class="badge ${badgeColor}">${d.status}</span></td>
-          <td style="white-space:normal; font-size:11px;">${d.ket}</td>
+          <td style="white-space:normal; font-size:11px;">${ketHtml}</td>
         `;
         tbody.appendChild(tr);
       });
-    })
-    .catch(e => {
-      btn.disabled = false; btn.innerHTML = isEn ? "🔍 Show Data" : "🔍 Tampilkan Data";
-      alert(isEn ? "Failed to load report. Check connection." : "Gagal memuat laporan. Periksa koneksi internet.");
+    }).catch(e => {
+      btn.disabled = false; btn.innerHTML = isEn ? "🔍 Show Data" : "🔍 Tampilkan Data"; alert("Gagal memuat laporan.");
     });
   }
 </script>
