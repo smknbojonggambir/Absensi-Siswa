@@ -9,20 +9,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root { 
-        --primary: #0f62fe; 
-        --primary-dark: #0043ce;
-        --primary-light: rgba(15, 98, 254, 0.06);
-        --bg: #f8fafc; 
+        --primary: #2563eb; 
+        --primary-dark: #1d4ed8;
+        --primary-light: #eff6ff;
+        --secondary-green: #22c55e;
+        --secondary-orange: #f97316;
+        --bg: #e2e8f0; 
         --card: #ffffff; 
         --text: #1e293b; 
         --text-muted: #64748b;
         --border: #e2e8f0;
-        --radius-lg: 28px;
+        --radius-xl: 32px;
+        --radius-lg: 24px;
         --radius-md: 16px;
-        --radius-sm: 10px;
-        --shadow-sm: 0 2px 8px rgba(15, 98, 254, 0.02);
-        --shadow-md: 0 20px 40px -4px rgba(15, 34, 68, 0.065), 0 8px 16px -4px rgba(15, 34, 68, 0.02);
-        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --shadow-lg: 0 20px 40px -4px rgba(37, 99, 235, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     * {
@@ -33,174 +34,195 @@
     
     body { 
         font-family: 'Inter', sans-serif; 
-        background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 50%, #e2e8f0 100%);
+        background: var(--bg);
         color: var(--text);
         margin: 0; 
-        padding: 24px 16px; 
+        padding: 0; 
         min-height: 100vh;
         display: flex;
         justify-content: center;
         align-items: flex-start;
+        overflow-x: hidden;
     }
+
+    /* LANGUAGE TOGGLE SYSTEM */
+    body.lang-id .en { display: none !important; }
+    body.lang-en .id { display: none !important; }
     
     .container { 
         width: 100%; 
         max-width: 480px; 
-        margin: 0 auto; 
+        margin: 0 auto;
+        position: relative;
+    }
+
+    /* TOP HEADER APP STYLE */
+    .app-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 30px 20px 80px;
+        border-bottom-left-radius: var(--radius-xl);
+        border-bottom-right-radius: var(--radius-xl);
+        color: white;
+        position: relative;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .lang-toggle {
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 6px 12px;
+        border-radius: 20px;
+        color: white;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-badge {
+        background: #dcfce7;
+        color: #166534;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo-img { 
+        height: 48px; 
+        width: 48px; 
+        background: white;
+        border-radius: 50%;
+        padding: 4px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .school-title {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.2;
     }
     
-    /* PREMIUM CAPSULE NAVIGATION TABS */
+    .school-subtitle {
+        font-size: 12px;
+        color: rgba(255,255,255,0.8);
+        margin-top: 4px;
+    }
+
+    /* FLOATING DECORATIONS (LIGHTWEIGHT) */
+    .deco {
+        position: absolute;
+        font-size: 28px;
+        z-index: 10;
+        animation: float 3s ease-in-out infinite;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+    .deco.book { top: 120px; left: -10px; animation-delay: 0s; }
+    .deco.clock { top: 160px; right: -5px; font-size: 32px; animation-delay: 0.5s; }
+    .deco.bag { top: 380px; left: -15px; font-size: 24px; animation-delay: 1s; }
+    .deco.calc { top: 520px; right: -15px; animation-delay: 1.5s; }
+
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    /* MAIN CARD */
+    .main-content {
+        padding: 0 16px;
+        margin-top: -50px;
+        position: relative;
+        z-index: 5;
+    }
+
+    .card { 
+        background: var(--card); 
+        padding: 24px; 
+        border-radius: var(--radius-lg); 
+        box-shadow: var(--shadow-lg); 
+        margin-bottom: 25px; 
+    }
+
+    /* CAPSULE NAVIGATION TABS */
     .nav-tabs { 
-        background: rgba(226, 232, 240, 0.8); 
-        backdrop-filter: blur(8px);
+        background: #f1f5f9; 
         padding: 6px; 
         border-radius: 20px; 
         display: flex; 
         margin-bottom: 24px; 
-        border: 1px solid rgba(255, 255, 255, 0.5);
     }
     .nav-btn { 
         flex: 1; 
-        padding: 14px 10px; 
-        border-radius: 14px; 
-        font-size: 14px; 
+        padding: 12px; 
+        border-radius: 16px; 
+        font-size: 13px; 
         font-weight: 600;
         background: transparent; 
         color: var(--text-muted); 
-        margin: 0; 
         border: none;
         cursor: pointer;
-        box-shadow: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
         transition: var(--transition);
-    }
-    .nav-btn:hover {
-        color: var(--text);
-        background: rgba(255, 255, 255, 0.4);
     }
     .nav-btn.active { 
         background: #ffffff; 
         color: var(--primary); 
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(15, 34, 68, 0.08); 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
     }
 
-    /* GLASSMORPHIC CARD UPGRADE */
-    .card { 
-        background: var(--card); 
-        padding: 36px 30px; 
-        border-radius: var(--radius-lg); 
-        box-shadow: var(--shadow-md); 
-        margin-bottom: 25px; 
-        border: 1px solid rgba(255, 255, 255, 0.7);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 6px;
-        background: linear-gradient(90deg, #0f62fe 0%, #0070f3 50%, #39b5ff 100%);
-        border-top-left-radius: var(--radius-lg);
-        border-top-right-radius: var(--radius-lg);
-    }
-    
-    .logo-container { 
-        text-align: center; 
-        margin-bottom: 16px; 
-    }
-    
-    .logo-img { 
-        height: 84px; 
-        width: auto; 
-        filter: drop-shadow(0 10px 20px rgba(15, 98, 254, 0.15));
-        transition: var(--transition);
-    }
-
-    .logo-img:hover {
-        transform: scale(1.05) rotate(2deg);
-    }
-    
-    h1 { 
-        margin: 0 0 8px; 
-        font-size: 26px; 
-        text-align: center; 
-        font-weight: 800;
-        color: #0f172a;
-        letter-spacing: -0.03em;
-    }
-    
-    .subtitle { 
-        text-align: center; 
-        color: var(--primary); 
-        font-size: 12px; 
-        font-weight: 700;
-        margin-bottom: 24px; 
-        background: var(--primary-light); 
-        padding: 6px 16px; 
-        border-radius: 99px; 
-        display: table;
-        margin-left: auto; 
-        margin-right: auto;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        border: 1px solid rgba(15, 98, 254, 0.12);
-    }
-
-    /* UPDATE ANNOUNCEMENT COMPONENT */
+    /* ANNOUNCEMENT COMPONENT */
     .announcement-box {
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        border: 1px solid #fde68a;
+        background: var(--primary-light);
+        border: 1px solid rgba(37, 99, 235, 0.2);
         border-radius: var(--radius-md);
-        padding: 16px;
-        margin-bottom: 26px;
+        padding: 14px;
+        margin-bottom: 20px;
         display: flex;
         gap: 12px;
         align-items: flex-start;
-        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.05);
-    }
-    .announcement-icon {
-        font-size: 20px;
-        line-height: 1;
-        animation: pulse 2s infinite;
     }
     .announcement-text {
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.5;
-        color: #78350f;
+        color: var(--primary-dark);
         margin: 0;
-        font-weight: 500;
-    }
-    .announcement-text strong {
-        font-weight: 700;
-        color: #451a03;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.15); }
-        100% { transform: scale(1); }
     }
     
     label { 
         display: flex;
         align-items: center;
         font-weight: 600; 
-        font-size: 13px; 
-        margin: 22px 0 8px; 
-        color: #334155;
-        letter-spacing: -0.01em;
+        font-size: 12px; 
+        margin: 16px 0 6px; 
+        color: var(--text-muted);
     }
     
     select, input, textarea { 
         width: 100%; 
-        padding: 14px 16px; 
+        padding: 14px; 
         border: 1px solid var(--border); 
         border-radius: var(--radius-md); 
-        font-size: 15px; 
+        font-size: 14px; 
         color: var(--text);
         background: #f8fafc;
         transition: var(--transition);
@@ -211,240 +233,113 @@
     select {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
-        background-position: right 16px center;
+        background-position: right 14px center;
         background-size: 14px;
         padding-right: 40px;
+        font-weight: 500;
     }
     
     select:focus, input:focus, textarea:focus {
         outline: none;
         border-color: var(--primary);
         background: #ffffff;
-        box-shadow: 0 0 0 4px rgba(15, 98, 254, 0.14);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
     
     button { 
         width: 100%; 
-        margin-top: 26px; 
-        padding: 16px 20px; 
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); 
+        margin-top: 20px; 
+        padding: 16px; 
+        background: var(--primary); 
         color: #ffffff; 
         border: none; 
         border-radius: var(--radius-md); 
-        font-size: 15px; 
+        font-size: 14px; 
         font-weight: 700; 
         cursor: pointer; 
         transition: var(--transition); 
-        box-shadow: 0 6px 16px rgba(15, 98, 254, 0.25);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        letter-spacing: -0.01em;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
     }
     
-    button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 22px rgba(15, 98, 254, 0.35);
-    }
+    button:active { transform: scale(0.98); }
+    button:disabled { background: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed; box-shadow: none !important; }
     
-    button:active { 
-        transform: scale(0.98) translateY(0); 
-    }
+    .btn-secondary { background: var(--text); box-shadow: 0 6px 16px rgba(30, 41, 59, 0.2); }
     
-    button:disabled { 
-        background: #cbd5e1 !important; 
-        color: #94a3b8 !important;
-        cursor: not-allowed; 
-        box-shadow: none !important; 
-        transform: none !important;
-    }
-    
-    .btn-secondary { 
-        background: linear-gradient(135deg, #334155 0%, #1e293b 100%); 
-        box-shadow: 0 6px 16px rgba(30, 41, 59, 0.2); 
-    }
-    .btn-secondary:hover {
-        box-shadow: 0 8px 22px rgba(30, 41, 59, 0.3);
-    }
-    
-    .btn-print { 
-        background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); 
-        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25); 
-        margin-top: 0; 
-        padding: 11px 20px; 
-        font-size: 13px;
-        width: auto;
-    }
-    .btn-print:hover {
-        box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35);
-    }
-    
-    /* KAMERA & PREVIEW CORNER */
+    /* CAMERA AREA */
     #wrapper-foto { 
         background: #f8fafc; 
-        padding: 24px 20px; 
+        padding: 16px; 
         border-radius: var(--radius-md); 
         border: 2px dashed #cbd5e1;
-        margin-top: 24px;
+        margin-top: 16px;
         text-align: center;
-        transition: var(--transition);
     }
     
     #camera-area { 
-        margin-top: 14px; 
-        text-align: center; 
-        background: #0f172a; 
+        margin-top: 10px; 
         border-radius: var(--radius-md); 
         overflow: hidden; 
         display: none; 
         position: relative; 
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        background: #000;
     }
     
-    video { 
-        width: 100%; 
-        height: auto; 
-        display: block; 
-        transform: scaleX(-1); 
-        object-fit: cover; 
-    }
-    #canvas { 
-        display: none; 
-    }
+    video { width: 100%; height: auto; display: block; transform: scaleX(-1); object-fit: cover; }
+    #canvas { display: none; }
     
     #hasil-foto { 
-        width: 100%; 
-        border-radius: var(--radius-md); 
-        margin-top: 14px; 
-        display: none; 
-        border: 3px solid var(--primary); 
-        transform: scaleX(-1); 
-        box-shadow: var(--shadow-md);
+        width: 100%; border-radius: var(--radius-md); margin-top: 10px; display: none; 
+        border: 3px solid var(--primary); transform: scaleX(-1); 
     }
     
-    .btn-cam { 
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
-        box-shadow: 0 6px 16px rgba(217, 119, 6, 0.25); 
+    .btn-cam { background: var(--secondary-orange); box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25); }
+    .btn-jepret {
+        position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+        width: auto; padding: 10px 24px; border-radius: 50px; background: white; color: #000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-top: 0;
     }
-    .btn-cam:hover {
-        box-shadow: 0 8px 22px rgba(217, 119, 6, 0.35);
-    }
-    
-    .btn-retake { 
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
-        margin-top: 14px; 
-        display: none; 
-        box-shadow: 0 6px 16px rgba(220, 38, 38, 0.25); 
-    }
-    .btn-retake:hover {
-        box-shadow: 0 8px 22px rgba(220, 38, 38, 0.35);
-    }
+    .btn-retake { background: #ef4444; margin-top: 10px; display: none; box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25); }
 
-    /* SPINNER & MESSAGES */
+    /* MESSAGES & SPINNER */
     .spinner { 
-        display: none; 
-        width: 16px; 
-        height: 16px; 
-        border: 2px solid rgba(15, 98, 254, 0.2); 
-        border-top-color: var(--primary); 
-        border-radius: 50%; 
-        animation: spin 0.6s linear infinite; 
-        margin-left: 8px; 
-        display: inline-block;
-        vertical-align: middle; 
+        display: none; width: 14px; height: 14px; border: 2px solid rgba(37,99,235, 0.2); 
+        border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; 
+        margin-left: 8px; vertical-align: middle; 
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    #msg { 
-        margin-top: 24px; 
-        text-align: center; 
-        font-size: 14px; 
-        padding: 16px; 
-        border-radius: var(--radius-md); 
-        display: none; 
-        font-weight: 600; 
-        line-height: 1.5;
-    }
-    .success { 
-        background: #f0fdf4; 
-        color: #166534; 
-        border: 1px solid #bbf7d0; 
-    }
-    .error { 
-        background: #fef2f2; 
-        color: #991b1b; 
-        border: 1px solid #fecaca; 
-    }
+    #msg { margin-top: 20px; text-align: center; font-size: 13px; padding: 14px; border-radius: var(--radius-md); display: none; font-weight: 600; }
+    .success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
     /* TABLES UPGRADE */
-    .table-responsive { 
-        overflow-x: auto; 
-        margin-top: 24px; 
-        border-radius: var(--radius-md); 
-        border: 1px solid var(--border); 
-        box-shadow: var(--shadow-sm);
-    }
-    table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-size: 13px; 
-        background: #ffffff;
-    }
-    th, td { 
-        padding: 14px 16px; 
-        text-align: left; 
-        border-bottom: 1px solid var(--border); 
-        white-space: nowrap; 
-    }
-    th { 
-        background: #f8fafc; 
-        font-weight: 700; 
-        color: #475569; 
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.05em;
-    }
-    tr:last-child td { 
-        border-bottom: none; 
-    }
-    tr:hover td { 
-        background: #f8fafc; 
-    }
+    .table-responsive { overflow-x: auto; margin-top: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; background: #ffffff; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { background: #f8fafc; font-weight: 700; color: #475569; text-transform: uppercase; font-size: 10px; }
     
-    .badge { 
-        padding: 6px 12px; 
-        border-radius: 8px; 
-        font-size: 11px; 
-        font-weight: 700; 
-        text-transform: uppercase; 
-        letter-spacing: 0.03em;
-        display: inline-block;
-    }
+    .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; display: inline-block; }
     .bg-Hadir { background: #dcfce7; color: #166534; }
-    .bg-Pulang { background: #f3e8ff; color: #6b21a8; }
+    .bg-Pulang { background: #ffedd5; color: #c2410c; }
     .bg-Sakit { background: #fee2e2; color: #991b1b; }
     .bg-Izin { background: #e0f2fe; color: #0369a1; }
 
-    .date-group { 
-        display: flex; 
-        gap: 12px; 
-    }
-    .date-group div { 
-        flex: 1; 
-    }
+    .date-group { display: flex; gap: 10px; }
+    .date-group div { flex: 1; }
+
+    /* STATUS OPTION COLORS (To match Masuk Hijau, Pulang Orange) */
+    select#status option[value="Hadir"] { color: var(--secondary-green); font-weight: bold; }
+    select#status option[value="Pulang"] { color: var(--secondary-orange); font-weight: bold; }
 
     @media print {
       body { background: white; padding: 0; }
-      .container { max-width: 100%; width: 100%; margin: 0; }
-      .nav-tabs, #sectionForm, .no-print, .input-area, .announcement-box { display: none !important; }
-      .card { box-shadow: none; border: none; padding: 0; }
-      .card::before { display: none; }
+      .container { max-width: 100%; }
+      .app-header, .deco, .nav-tabs, #sectionForm, .no-print, .input-area, .announcement-box { display: none !important; }
+      .card { box-shadow: none; border: none; padding: 0; margin:0; }
+      .main-content { margin-top: 0; }
       #sectionLaporan { display: block !important; }
-      h1 { font-size: 20px; text-decoration: underline; margin-bottom: 5px; color: black; }
-      .subtitle { display: none; }
       #reportHeader { display: block !important; margin-bottom: 15px; font-weight: bold; font-size: 14px; border-bottom: 2px solid black; padding-bottom: 10px; }
-      .logo-container { display: block !important; margin-bottom: 10px; }
-      .logo-img { max-height: 80px; filter: none; }
       table { border: 1px solid #000; font-size: 11px; width: 100%; }
       th, td { border: 1px solid #000; padding: 6px; color: black; white-space: normal; }
       th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
@@ -452,155 +347,224 @@
     }
   </style>
 </head>
-<body>
+<body class="lang-id">
+
 <div class="container">
   
-  <div class="nav-tabs no-print">
-    <button class="nav-btn active" onclick="switchTab('form')">📝 Isi Absen</button>
-    <button class="nav-btn" onclick="switchTab('laporan')">🖨️ Laporan</button>
+  <!-- DECORATIVE EMOJIS (LIGHTWEIGHT IMAGES) -->
+  <div class="deco book">📚</div>
+  <div class="deco clock">⏰</div>
+  <div class="deco bag">🎒</div>
+  <div class="deco calc">🧮</div>
+
+  <!-- HEADER -->
+  <div class="app-header no-print">
+    <div class="top-bar">
+        <button class="lang-toggle" onclick="toggleLang()">
+            🌐 <span class="id">ID</span><span class="en">EN</span>
+        </button>
+        <div class="status-badge">
+            <span class="id">↓↑ Online</span><span class="en">↓↑ Online</span>
+        </div>
+    </div>
+    <div class="profile-info">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgz1tbb8TSawO2lHGi_GXN3Il5CtrN_K125hSy7D8NxvBFL6bywiebvkalj_6oRIBVxEm_zj84j6ZAlhKmaEOqjIeGHXe9SWw0HQipKs3aL8iy7K1Dc_Pd9SHMVZsOQrb99qTK78Wmee7StIKKzzfST5YU_CkGSAz3MuMJsrSL_nHt37c5AzIe8B7HodnQ/s320/LOGO%20SMKN%20BOJONGGAMBIR.png" alt="Logo" class="logo-img" referrerpolicy="no-referrer">
+        <div>
+            <h1 class="school-title">Absensi Siswa<br><span style="font-size:14px;font-weight:600;">SMKN Bojonggambir</span></h1>
+            <div class="school-subtitle id" id="tanggalDisplayID">Memuat Tanggal...</div>
+            <div class="school-subtitle en" id="tanggalDisplayEN">Loading Date...</div>
+        </div>
+    </div>
   </div>
 
-  <div class="card">
-    
-    <div class="logo-container">
-        <img 
-            src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgz1tbb8TSawO2lHGi_GXN3Il5CtrN_K125hSy7D8NxvBFL6bywiebvkalj_6oRIBVxEm_zj84j6ZAlhKmaEOqjIeGHXe9SWw0HQipKs3aL8iy7K1Dc_Pd9SHMVZsOQrb99qTK78Wmee7StIKKzzfST5YU_CkGSAz3MuMJsrSL_nHt37c5AzIe8B7HodnQ/s320/LOGO%20SMKN%20BOJONGGAMBIR.png" 
-            alt="Logo Sekolah" 
-            class="logo-img"
-            referrerpolicy="no-referrer"
-        >
-    </div>
-    <h1>Absensi SMKN Bojonggambir</h1>
-    <div class="subtitle" id="tanggalDisplay">Memuat Tanggal...</div>
-
-    <!-- BOX PENGUMUMAN (Silakan edit teks di bawah ini sesuai kebutuhan sekolah) -->
-    <div class="announcement-box no-print">
-      <div class="announcement-icon">📢</div>
-      <div class="announcement-text">
-        <strong>Pengumuman Penting:</strong> Jam batas toleransi Absen Masuk adalah pukul 07:15 WIB. Mohon aktifkan GPS ponsel tinggi dan izinkan akses Kamera agar verifikasi presensi Anda berhasil divalidasi sistem.
-      </div>
-    </div>
-
-    <div id="sectionForm">
-      <form onsubmit="return false">
-        <label>Kelas <span id="loadKelas" class="spinner" style="display:none;"></span></label>
-        <select id="kelas" onchange="loadSiswa()">
-          <option value="">-- Pilih Kelas --</option>
-        </select>
-
-        <label>Nama Siswa <span id="loadSiswa" class="spinner" style="display:none;"></span></label>
-        <select id="nama" onchange="setNIS()" disabled>
-          <option value="">-- Pilih Kelas Dulu --</option>
-        </select>
-
-        <label>NIS</label>
-        <input type="text" id="nis" placeholder="Otomatis terisi" readonly style="background: #e2e8f0; cursor: default; color: #64748b;">
-
-        <label>Status Kehadiran</label>
-        <select id="status" onchange="cekStatusFoto()">
-          <option value="Hadir">✅ Absen Masuk (Hadir)</option>
-          <option value="Pulang">🏠 Absen Pulang</option>
-          <option value="Izin">📩 Izin</option>
-          <option value="Sakit">🤒 Sakit</option>
-        </select>
-
-        <label>Keterangan (Opsional)</label>
-        <textarea id="ket" rows="2" placeholder="Contoh: Ban bocor, Sakit Demam, dll..."></textarea>
-
-        <div id="wrapper-foto">
-            <label style="margin-top:0; justify-content:center; font-size:14px;">Foto Selfie</label>
-            <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px; font-weight:500;">Wajib untuk Masuk & Pulang</div>
-            
-            <button id="btnBukaKamera" class="btn-cam" onclick="bukaKamera()">📷 Buka Kamera</button>
-            
-            <div id="camera-area">
-                <video id="video" playsinline autoplay></video>
-                <canvas id="canvas"></canvas>
-                <button id="btnJepret" onclick="ambilFoto()" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); width:auto; padding:12px 24px; border-radius:50px; background:#ffffff; color:#000000; border:none; box-shadow:0 8px 24px rgba(0,0,0,0.3); font-weight:700; font-size:13px; letter-spacing:0.03em;">🔘 AMBIL FOTO</button>
-            </div>
-
-            <img id="hasil-foto" src="">
-            <input type="hidden" id="foto-base64">
-            <button id="btnUlang" class="btn-retake" onclick="resetKamera()">🔄 Foto Ulang</button>
-        </div>
-
-        <button id="btnKirim" onclick="cekLokasiDanKirim()">🚀 Kirim Absensi</button>
-      </form>
-      <div id="msg"></div>
-    </div>
-
-    <div id="sectionLaporan" style="display: none;">
+  <div class="main-content">
+    <div class="card">
       
-      <div class="input-area">
-        <div style="background:var(--primary-light); padding:12px 16px; border-radius:var(--radius-md); margin-bottom:20px; border:1px solid rgba(15, 98, 254, 0.15); color:var(--primary); font-size:13px; font-weight:600; display:flex; align-items:center;">
-          🔒 Mode Admin Aktif
-        </div>
-
-        <label>Filter Kelas:</label>
-        <select id="lapKelas">
-            <option value="">-- Semua Kelas --</option>
-        </select>
-
-        <label>Jenis Laporan:</label>
-        <select id="lapPeriode" onchange="toggleDateInputs()">
-            <option value="harian">Laporan Harian</option>
-            <option value="range">Laporan Berkala (Mingguan/Semester)</option>
-        </select>
-
-        <div id="dateHarian">
-            <label>Pilih Tanggal:</label>
-            <input type="date" id="tglHarian">
-        </div>
-
-        <div id="dateRange" class="date-group" style="display:none">
-            <div>
-                <label>Dari:</label>
-                <input type="date" id="tglMulai">
-            </div>
-            <div>
-                <label>Sampai:</label>
-                <input type="date" id="tglSelesai">
-            </div>
-        </div>
-
-        <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">🔍 Tampilkan Data</button>
+      <div class="nav-tabs no-print">
+        <button class="nav-btn active" onclick="switchTab('form')">
+            <span class="id">📝 Isi Absen</span><span class="en">📝 Check In/Out</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('laporan')">
+            <span class="id">🖨️ Laporan</span><span class="en">🖨️ Report</span>
+        </button>
       </div>
-      
-      <div id="areaLaporan" style="display:none; margin-top:25px;">
-        <div id="reportHeader" style="display:none;">
-            <div style="font-size:16px; text-transform:uppercase;">Laporan Absensi Siswa</div>
-            <div>Periode: <span id="printPeriode"></span></div>
-            <div>Kelas: <span id="printKelas"></span></div>
-        </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
-            <strong id="infoTotal" style="color:#161616; font-size:14px; font-weight:700;">Total: 0</strong>
-            <button onclick="window.print()" class="btn-print">🖨️ Cetak PDF</button>
+      <!-- BOX PENGUMUMAN / ANNOUNCEMENT -->
+      <div class="announcement-box no-print">
+        <div style="font-size: 20px;">📢</div>
+        <div class="announcement-text id">
+          <strong>Perhatian:</strong> Aktifkan Lokasi (GPS) dan Kamera ponsel Anda untuk merekam presensi sekolah.
+        </div>
+        <div class="announcement-text en">
+            <strong>Attention:</strong> Please enable Location (GPS) and Camera to record your school attendance.
+        </div>
+      </div>
+
+      <!-- SECTION FORM -->
+      <div id="sectionForm">
+        <form onsubmit="return false">
+          
+          <label>
+              <span class="id">Pilih Kelas</span><span class="en">Select Class</span> 
+              <span id="loadKelas" class="spinner" style="display:none;"></span>
+          </label>
+          <select id="kelas" onchange="loadSiswa()">
+            <option value="" class="id">-- Pilih Kelas --</option>
+            <option value="" class="en">-- Select Class --</option>
+          </select>
+
+          <label>
+              <span class="id">Nama Siswa</span><span class="en">Student Name</span> 
+              <span id="loadSiswa" class="spinner" style="display:none;"></span>
+          </label>
+          <select id="nama" onchange="setNIS()" disabled>
+            <option value="" class="id">-- Pilih Kelas Dulu --</option>
+            <option value="" class="en">-- Select Class First --</option>
+          </select>
+
+          <label><span class="id">NIS / Nomor Induk</span><span class="en">Student ID (NIS)</span></label>
+          <input type="text" id="nis" placeholder="Otomatis terisi / Auto-filled" readonly style="background: #e2e8f0; cursor: default; color: #64748b;">
+
+          <label><span class="id">Kehadiran Hari Ini</span><span class="en">Today's Attendance</span></label>
+          <select id="status" onchange="cekStatusFoto()">
+            <option value="Hadir">🟩 Masuk Sekolah (School Check In)</option>
+            <option value="Pulang">🟧 Pulang Sekolah (School Check Out)</option>
+            <option value="Izin">📩 Izin (Excused Absence)</option>
+            <option value="Sakit">🤒 Sakit (Sick Leave)</option>
+          </select>
+
+          <label><span class="id">Keterangan (Opsional)</span><span class="en">Notes (Optional)</span></label>
+          <textarea id="ket" rows="2" placeholder="Contoh: Ban bocor, Sakit Demam... / E.g: Flat tire, Fever..."></textarea>
+
+          <div id="wrapper-foto">
+              <label style="margin-top:0; justify-content:center; font-size:13px; color:var(--text);">
+                  <span class="id">📸 Foto Selfie Wajib</span><span class="en">📸 Mandatory Selfie</span>
+              </label>
+              
+              <button id="btnBukaKamera" class="btn-cam" onclick="bukaKamera()">
+                  <span class="id">📷 Buka Kamera</span><span class="en">📷 Open Camera</span>
+              </button>
+              
+              <div id="camera-area">
+                  <video id="video" playsinline autoplay></video>
+                  <canvas id="canvas"></canvas>
+                  <button id="btnJepret" class="btn-jepret" onclick="ambilFoto()">
+                      <span class="id">🔘 AMBIL FOTO</span><span class="en">🔘 CAPTURE</span>
+                  </button>
+              </div>
+
+              <img id="hasil-foto" src="">
+              <input type="hidden" id="foto-base64">
+              <button id="btnUlang" class="btn-retake" onclick="resetKamera()">
+                  <span class="id">🔄 Foto Ulang</span><span class="en">🔄 Retake Photo</span>
+              </button>
+          </div>
+
+          <button id="btnKirim" onclick="cekLokasiDanKirim()">
+              <span class="id">🚀 Kirim Absensi</span><span class="en">🚀 Submit Attendance</span>
+          </button>
+        </form>
+        <div id="msg"></div>
+      </div>
+
+      <!-- SECTION LAPORAN -->
+      <div id="sectionLaporan" style="display: none;">
+        <div class="input-area">
+          <div style="background:var(--primary-light); padding:10px 14px; border-radius:10px; margin-bottom:16px; border:1px solid rgba(37,99,235, 0.15); color:var(--primary); font-size:12px; font-weight:600; display:flex; align-items:center;">
+            🔒 <span class="id">Mode Admin Aktif</span><span class="en">Admin Mode Active</span>
+          </div>
+
+          <label><span class="id">Filter Kelas:</span><span class="en">Filter by Class:</span></label>
+          <select id="lapKelas">
+              <option value="" class="id">-- Semua Kelas --</option>
+              <option value="" class="en">-- All Classes --</option>
+          </select>
+
+          <label><span class="id">Jenis Laporan:</span><span class="en">Report Type:</span></label>
+          <select id="lapPeriode" onchange="toggleDateInputs()">
+              <option value="harian" class="id">Laporan Harian</option>
+              <option value="harian" class="en">Daily Report</option>
+              <option value="range" class="id">Laporan Berkala (Mingguan)</option>
+              <option value="range" class="en">Periodic Report (Weekly)</option>
+          </select>
+
+          <div id="dateHarian">
+              <label><span class="id">Pilih Tanggal:</span><span class="en">Select Date:</span></label>
+              <input type="date" id="tglHarian">
+          </div>
+
+          <div id="dateRange" class="date-group" style="display:none">
+              <div>
+                  <label><span class="id">Dari:</span><span class="en">From:</span></label>
+                  <input type="date" id="tglMulai">
+              </div>
+              <div>
+                  <label><span class="id">Sampai:</span><span class="en">To:</span></label>
+                  <input type="date" id="tglSelesai">
+              </div>
+          </div>
+
+          <button id="btnLoadLaporan" class="btn-secondary no-print" onclick="loadLaporan()">
+              <span class="id">🔍 Tampilkan Data</span><span class="en">🔍 Show Data</span>
+          </button>
         </div>
         
-        <div class="table-responsive">
-          <table id="tabelLaporan">
-            <thead>
-              <tr>
-                <th width="5%">No</th>
-                <th width="20%">Waktu</th>
-                <th width="30%">Nama</th>
-                <th width="15%">Kelas</th>
-                <th width="10%">Status</th>
-                <th width="20%">Ket</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
+        <div id="areaLaporan" style="display:none; margin-top:20px;">
+          <div id="reportHeader" style="display:none;">
+              <div style="font-size:16px; text-transform:uppercase;">Student Attendance Report</div>
+              <div>Period: <span id="printPeriode"></span></div>
+              <div>Class: <span id="printKelas"></span></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
+              <strong id="infoTotal" style="font-size:13px;">Total: 0</strong>
+              <button onclick="window.print()" style="margin-top:0; padding:8px 14px; width:auto; font-size:12px; background:var(--secondary-green);">
+                  <span class="id">🖨️ Cetak PDF</span><span class="en">🖨️ Print PDF</span>
+              </button>
+          </div>
+          
+          <div class="table-responsive">
+            <table id="tabelLaporan">
+              <thead>
+                <tr>
+                  <th width="5%">No</th>
+                  <th width="20%"><span class="id">Waktu</span><span class="en">Time</span></th>
+                  <th width="30%"><span class="id">Nama</span><span class="en">Name</span></th>
+                  <th width="15%"><span class="id">Kelas</span><span class="en">Class</span></th>
+                  <th width="10%">Status</th>
+                  <th width="20%"><span class="id">Ket</span><span class="en">Notes</span></th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
 </div>
 
 <script>
+  // --- FUNGSI DUA BAHASA (ID & EN) ---
+  function toggleLang() {
+      const body = document.body;
+      if(body.classList.contains('lang-id')) {
+          body.classList.replace('lang-id', 'lang-en');
+      } else {
+          body.classList.replace('lang-en', 'lang-id');
+      }
+      setTanggalDisplay();
+  }
+
+  function setTanggalDisplay() {
+      const today = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('tanggalDisplayID').innerText = today.toLocaleDateString('id-ID', options);
+      document.getElementById('tanggalDisplayEN').innerText = today.toLocaleDateString('en-US', options);
+  }
+
   // --- URL DEPLOYMENT GOOGLE SCRIPT ---
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyy99RLpALvgwpH-lW4JRmDcLdw-1mTcE7U953adq16sdgXzHNK0F_iO-DtKNIW36Fu/exec'; 
 
@@ -608,10 +572,10 @@
   let videoStream = null;
 
   window.onload = function() {
-    const today = new Date();
-    document.getElementById('tanggalDisplay').innerText = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    setTanggalDisplay();
     
     // Set default dates
+    const today = new Date();
     const yyyymmdd = today.toISOString().split('T')[0];
     document.getElementById('tglHarian').value = yyyymmdd;
     document.getElementById('tglMulai').value = yyyymmdd;
@@ -622,10 +586,13 @@
 
   // --- PASSWORD PROTECTION FOR REPORT TAB ---
   function switchTab(tab) {
+    const isEn = document.body.classList.contains('lang-en');
+
     if (tab === 'laporan') {
-        const pass = prompt("🔐 Masukkan Password Admin untuk akses laporan:");
+        const promptMsg = isEn ? "🔐 Enter Admin Password to access reports:" : "🔐 Masukkan Password Admin untuk akses laporan:";
+        const pass = prompt(promptMsg);
         if (pass !== '123456') {
-            alert("❌ Password Salah! Akses ditolak.");
+            alert(isEn ? "❌ Wrong Password! Access denied." : "❌ Password Salah! Akses ditolak.");
             return;
         }
     }
@@ -669,18 +636,28 @@
           let o2 = document.createElement('option'); o2.value=k; o2.textContent=k; selLap.appendChild(o2);
       });
       spin.style.display = 'none';
-    }).catch(e => { alert('Gagal memuat kelas'); spin.style.display = 'none'; });
+    }).catch(e => { 
+        alert('Failed to load class / Gagal memuat kelas'); 
+        spin.style.display = 'none'; 
+    });
   }
 
   function loadSiswa() {
     const k = document.getElementById('kelas').value;
     const n = document.getElementById('nama');
     const s = document.getElementById('loadSiswa');
-    n.innerHTML = '<option>Memuat...</option>'; n.disabled=true; document.getElementById('nis').value='';
+    const isEn = document.body.classList.contains('lang-en');
+
+    n.innerHTML = `<option>${isEn ? 'Loading...' : 'Memuat...'}</option>`; 
+    n.disabled=true; 
+    document.getElementById('nis').value='';
+    
     if(!k) return;
     s.style.display = 'inline-block';
+    
     fetch(SCRIPT_URL + '?action=getSiswa&kelas=' + encodeURIComponent(k)).then(r=>r.json()).then(data => {
-      dbSiswa = data; n.innerHTML = '<option value="">-- Pilih Nama --</option>';
+      dbSiswa = data; 
+      n.innerHTML = `<option value="">-- ${isEn ? 'Select Name' : 'Pilih Nama'} --</option>`;
       data.forEach(d => { let o = document.createElement('option'); o.value=d.nama; o.textContent=d.nama; n.appendChild(o); });
       n.disabled=false; s.style.display='none';
     });
@@ -722,7 +699,7 @@
         document.getElementById('hasil-foto').style.display = 'none';
         document.getElementById('btnUlang').style.display = 'none';
     } catch (err) {
-        alert("Gagal membuka kamera: " + err.message);
+        alert("Gagal membuka kamera / Failed to open camera: " + err.message);
     }
   }
 
@@ -773,11 +750,12 @@
     const msg = document.getElementById('msg');
     const nis = document.getElementById('nis').value;
     const foto = document.getElementById('foto-base64').value;
+    const isEn = document.body.classList.contains('lang-en');
 
-    if(!nis) { alert("Pilih siswa dulu!"); return; }
+    if(!nis) { alert(isEn ? "Select student first!" : "Pilih siswa dulu!"); return; }
     
     if (['Hadir', 'Pulang'].includes(status) && !foto) {
-        alert("Wajib mengambil foto selfie!");
+        alert(isEn ? "Selfie photo is required!" : "Wajib mengambil foto selfie!");
         return;
     }
 
@@ -786,15 +764,26 @@
         return; 
     }
 
-    btn.disabled = true; btn.innerText = "📍 Mengambil Lokasi..."; msg.style.display = 'none';
+    btn.disabled = true; 
+    btn.innerHTML = isEn ? "📍 Getting Location..." : "📍 Mengambil Lokasi..."; 
+    msg.style.display = 'none';
 
     if (!navigator.geolocation) {
-      btn.disabled = false; btn.innerText = "🚀 Kirim Absensi"; alert("Browser tidak support GPS."); return;
+      btn.disabled = false; 
+      btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+      alert(isEn ? "Browser does not support GPS." : "Browser tidak support GPS."); 
+      return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => { kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
-      (err) => { btn.disabled=false; btn.innerText="🚀 Kirim Absensi"; msg.style.display='block'; msg.className='error'; msg.innerText="Gagal GPS. Pastikan GPS HP Aktif!"; },
+      (err) => { 
+          btn.disabled=false; 
+          btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+          msg.style.display='block'; 
+          msg.className='error'; 
+          msg.innerText = isEn ? "GPS Failed. Make sure location is turned on!" : "Gagal GPS. Pastikan GPS HP Aktif!"; 
+      },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -802,6 +791,7 @@
   function kirimKeServer(lokasi) {
     const btn = document.getElementById('btnKirim');
     const msg = document.getElementById('msg');
+    const isEn = document.body.classList.contains('lang-en');
     
     const payload = {
       nis: document.getElementById('nis').value,
@@ -814,15 +804,17 @@
       image: document.getElementById('foto-base64').value
     };
 
-    btn.innerText = "📤 Mengirim Data...";
+    btn.innerHTML = isEn ? "📤 Sending Data..." : "📤 Mengirim Data...";
 
     fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(res => {
-      btn.disabled = false; btn.innerText = "🚀 Kirim Absensi"; msg.style.display = 'block';
+      btn.disabled = false; 
+      btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+      msg.style.display = 'block';
       if(res.ok) {
         msg.className = 'success';
-        msg.innerText = res.message;
+        msg.innerText = res.message; // From Google Apps Script
         
         // Reset Form
         document.getElementById('nama').value = ''; 
@@ -840,33 +832,39 @@
         msg.className = 'error'; msg.innerText = res.message;
       }
     })
-    .catch(err => { btn.disabled = false; btn.innerText = "🚀 Kirim Absensi"; msg.style.display = 'block'; msg.className = 'error'; msg.innerText = "Gagal Konek Server."; });
+    .catch(err => { 
+        btn.disabled = false; 
+        btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
+        msg.style.display = 'block'; msg.className = 'error'; 
+        msg.innerText = isEn ? "Server Connection Failed." : "Gagal Konek Server."; 
+    });
   }
 
   // --- LAPORAN FILTER ---
   function loadLaporan() {
     const kelas = document.getElementById('lapKelas').value;
     const mode = document.getElementById('lapPeriode').value;
+    const isEn = document.body.classList.contains('lang-en');
     
     let tglMulai, tglAkhir;
 
     if (mode === 'harian') {
         const tgl = document.getElementById('tglHarian').value;
-        if(!tgl) { alert("Pilih tanggal!"); return; }
+        if(!tgl) { alert(isEn ? "Select date!" : "Pilih tanggal!"); return; }
         tglMulai = tgl;
         tglAkhir = tgl;
     } else {
         tglMulai = document.getElementById('tglMulai').value;
         tglAkhir = document.getElementById('tglSelesai').value;
-        if(!tglMulai || !tglAkhir) { alert("Pilih tanggal mulai dan sampai!"); return; }
-        if(tglMulai > tglAkhir) { alert("Tanggal mulai tidak boleh lebih besar dari selesai!"); return; }
+        if(!tglMulai || !tglAkhir) { alert(isEn ? "Select start and end dates!" : "Pilih tanggal mulai dan sampai!"); return; }
+        if(tglMulai > tglAkhir) { alert(isEn ? "Start date cannot be greater than end date!" : "Tanggal mulai tidak boleh lebih besar dari selesai!"); return; }
     }
     
     const btn = document.getElementById('btnLoadLaporan');
     const area = document.getElementById('areaLaporan');
     const tbody = document.querySelector('#tabelLaporan tbody');
     
-    btn.disabled = true; btn.innerText = "⏳ Memuat...";
+    btn.disabled = true; btn.innerHTML = isEn ? "⏳ Loading..." : "⏳ Memuat...";
     area.style.display = 'none'; tbody.innerHTML = '';
 
     const params = `?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`;
@@ -874,17 +872,17 @@
     fetch(SCRIPT_URL + params)
     .then(r => r.json())
     .then(data => {
-      btn.disabled = false; btn.innerText = "🔍 Tampilkan Data";
+      btn.disabled = false; btn.innerHTML = isEn ? "🔍 Show Data" : "🔍 Tampilkan Data";
       area.style.display = 'block';
-      document.getElementById('infoTotal').innerText = "Total: " + data.length + " Siswa";
+      document.getElementById('infoTotal').innerText = isEn ? `Total: ${data.length} Students` : `Total: ${data.length} Siswa`;
 
-      const namaKelas = kelas ? kelas : "Semua Kelas";
+      const namaKelas = kelas ? kelas : (isEn ? "All Classes" : "Semua Kelas");
       const periode = (tglMulai === tglAkhir) ? tglMulai : `${tglMulai} s/d ${tglAkhir}`;
       document.getElementById('printKelas').innerText = namaKelas;
       document.getElementById('printPeriode').innerText = periode;
 
       if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Belum ada data absensi.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">${isEn ? 'No attendance data yet.' : 'Belum ada data absensi.'}</td></tr>`;
         return;
       }
 
@@ -898,17 +896,17 @@
         tr.innerHTML = `
           <td>${i+1}</td>
           <td>${d.tanggal}<br><small style="color:gray">${d.waktu}</small></td>
-          <td>${d.nama}</td>
+          <td style="font-weight:600;">${d.nama}</td>
           <td>${d.kelas}</td>
           <td><span class="badge ${badgeColor}">${d.status}</span></td>
-          <td style="white-space:normal; font-size:12px;">${d.ket}</td>
+          <td style="white-space:normal; font-size:11px;">${d.ket}</td>
         `;
         tbody.appendChild(tr);
       });
     })
     .catch(e => {
-      btn.disabled = false; btn.innerText = "🔍 Tampilkan Data";
-      alert("Gagal memuat laporan. Periksa koneksi internet.");
+      btn.disabled = false; btn.innerHTML = isEn ? "🔍 Show Data" : "🔍 Tampilkan Data";
+      alert(isEn ? "Failed to load report. Check connection." : "Gagal memuat laporan. Periksa koneksi internet.");
     });
   }
 </script>
