@@ -304,7 +304,7 @@
     #msg { margin-top: 20px; text-align: center; font-size: 13px; padding: 14px; border-radius: var(--radius-md); display: none; font-weight: 600; line-height: 1.5; }
     .success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
     .error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .warning { background: #fefce8; color: #a16207; border: 1px solid #fde047; } /* Kuning untuk terlambat */
+    .warning { background: #fefce8; color: #a16207; border: 1px solid #fde047; }
 
     .table-responsive { overflow-x: auto; margin-top: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 12px; background: #ffffff; }
@@ -381,10 +381,10 @@
       <div class="announcement-box no-print">
         <div style="font-size: 20px;">📢</div>
         <div class="announcement-text id">
-          <strong>Perhatian:</strong> Aktifkan Lokasi dan Kamera untuk absen. Jam masuk adalah maksimal pukul <strong>07:00</strong>.
+          <strong>Perhatian:</strong> Aktifkan Lokasi dan Kamera untuk absen. Jam masuk adalah maksimal pukul <strong>07:00</strong>. Dilarang menggunakan VPN / Fake GPS!
         </div>
         <div class="announcement-text en">
-            <strong>Attention:</strong> Enable Location and Camera. The check-in deadline is <strong>07:00 AM</strong>.
+            <strong>Attention:</strong> Enable Location and Camera. The check-in deadline is <strong>07:00 AM</strong>. VPN / Fake GPS prohibited!
         </div>
       </div>
 
@@ -572,7 +572,7 @@
       if ('speechSynthesis' in window) {
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = isEn ? 'en-US' : 'id-ID';
-          utterance.rate = 0.9; // Kecepatan bicara sedikit diperlambat agar jelas
+          utterance.rate = 0.9;
           window.speechSynthesis.speak(utterance);
       }
   }
@@ -584,6 +584,45 @@
       const m = now.getMinutes().toString().padStart(2, '0');
       const currentTime = `${h}:${m}`;
       return currentTime > BATAS_JAM_MASUK;
+  }
+
+  // ===================================================
+  // --- FUNGSI BARU: DETEKSI FAKE GPS & VPN ---
+  // ===================================================
+  function isFakeGPS(pos) {
+      // 1. Cek flag mock bawaan sistem WebView/Android
+      if (pos.isFromMockProvider || pos.mocked) return true;
+      
+      // 2. Cek anomali akurasi Fake GPS (Akurasi yang terlalu sempurna < 0.1m atau tidak lazim)
+      if (pos.coords && pos.coords.accuracy !== undefined) {
+          if (pos.coords.accuracy <= 0.1) return true; 
+      }
+      return false;
+  }
+
+  async function checkVPN() {
+      try {
+          // Mengambil IP info dari service publik
+          const res = await fetch('https://ipapi.co/json/', { cache: 'no-cache' });
+          const data = await res.json();
+          
+          // A. Jika IP berasal dari luar Indonesia (Misal VPN luar negeri)
+          if (data.country_code && data.country_code !== 'ID') {
+              return true;
+          }
+          
+          // B. Deteksi Mismatch Zona Waktu lokal dengan IP VPN
+          const systemTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          if (data.timezone && systemTimezone) {
+              if (data.timezone !== systemTimezone) {
+                  return true;
+              }
+          }
+          return false;
+      } catch (err) {
+          // Jika koneksi gagal / diblokir VPN, anggap aman untuk mencegah false alarm saat offline
+          return false;
+      }
   }
 
   function switchTab(tab) {
@@ -692,7 +731,7 @@
   function stopCamera() { if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; } }
   function resetKamera() { document.getElementById('foto-base64').value = ""; document.getElementById('hasil-foto').style.display = 'none'; bukaKamera(); }
 
-  // --- MODIFIKASI PENGIRIMAN DATA (TERLAMBAT & SUARA) ---
+  // --- MODIFIKASI TERINTEGRASI UNTUK CEK FAKE GPS & VPN ---
   function cekLokasiDanKirim() {
     const status = document.getElementById('status').value;
     const btn = document.getElementById('btnKirim');
@@ -711,7 +750,36 @@
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => { kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+      async (pos) => { 
+          // 1. CEK APALAH MENGGUNAKAN FAKE GPS
+          if (isFakeGPS(pos)) {
+              btn.disabled = false; 
+              btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi";
+              const errorText = isEn 
+                ? "⚠️ Fake GPS detected! Please UNINSTALL or DISABLE Fake GPS applications on your device before submitting attendance." 
+                : "⚠️ Terdeteksi penggunaan Fake GPS! Harap UNINSTAL atau matikan aplikasi Fake GPS di HP Anda sebelum melakukan absensi.";
+              alert(errorText);
+              msg.style.display = 'block'; msg.className = 'error'; msg.innerText = errorText;
+              return;
+          }
+
+          // 2. CEK APABILA MENGGUNAKAN VPN
+          btn.innerHTML = isEn ? "🛡️ Checking Network Security..." : "🛡️ Memeriksa Jaringan...";
+          const isVpnActive = await checkVPN();
+          if (isVpnActive) {
+              btn.disabled = false; 
+              btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi";
+              const vpnText = isEn 
+                ? "⚠️ VPN active detected! Please UNINSTALL or TURN OFF VPN applications before submitting attendance." 
+                : "⚠️ Terdeteksi penggunaan VPN! Harap UNINSTAL atau matikan aplikasi VPN di HP Anda sebelum melakukan absensi.";
+              alert(vpnText);
+              msg.style.display = 'block'; msg.className = 'error'; msg.innerText = vpnText;
+              return;
+          }
+
+          // Lanjut kirim ke server jika aman
+          kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude }); 
+      },
       (err) => { 
           btn.disabled=false; btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
           msg.style.display='block'; msg.className='error'; msg.innerText = isEn ? "GPS Failed!" : "Gagal GPS. Pastikan GPS HP Aktif!"; 
@@ -732,7 +800,6 @@
     let isLate = false;
     let lateUIMessage = "";
 
-    // Logika jika absen "Hadir" dan melampaui jam 07:00
     if (status === 'Hadir') {
         isLate = cekApakahTerlambat();
         if (isLate) {
@@ -762,11 +829,9 @@
       btn.disabled = false; btn.innerHTML = isEn ? "🚀 Submit Attendance" : "🚀 Kirim Absensi"; 
       msg.style.display = 'block';
       if(res.ok) {
-        // Atur warna notifikasi (Hijau jika sukses, Kuning jika sukses tapi terlambat)
         msg.className = (isLate && status === 'Hadir') ? 'warning' : 'success';
         msg.innerHTML = res.message + lateUIMessage; 
 
-        // Mainkan Suara (Voice Announcement)
         let textSuara = "";
         if (status === 'Hadir') {
             if (isLate) {
@@ -781,7 +846,6 @@
         }
         playVoice(textSuara, isEn);
         
-        // Reset Form
         document.getElementById('nama').value = ''; 
         document.getElementById('nis').value = ''; 
         document.getElementById('ket').value = ''; 
@@ -844,7 +908,6 @@
         if(d.status === 'Sakit') badgeColor = 'bg-Sakit';
         if(d.status === 'Izin') badgeColor = 'bg-Izin';
 
-        // Beri style merah pada teks keterangan jika ada kata "[TERLAMBAT]"
         let ketHtml = d.ket;
         if (ketHtml.includes("[TERLAMBAT]")) {
             ketHtml = ketHtml.replace("[TERLAMBAT]", "<strong style='color:#dc2626;'>[TERLAMBAT]</strong>");
