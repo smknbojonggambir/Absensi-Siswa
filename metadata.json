@@ -1,0 +1,6 @@
+{
+  "name": "Absensi SMKN Bojonggambir",
+  "description": "Aplikasi Absensi Siswa SMKN Bojonggambir dengan fitur Laporan Rekap Harian, Mingguan, dan Bulanan",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
