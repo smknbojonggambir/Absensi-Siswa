@@ -1,6 +1,6 @@
 import { AbsenRecord, Siswa, StatusAbsen } from '../types';
 
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyy99RLpALvgwpH-lW4JRmDcLdw-1mTcE7U953adq16sdgXzHNK0F_iO-DtKNIW36Fu/exec';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyytS2HhYXJaFHx443XPKdgWBOH4izHQ4yPaCMStJBCLxie54djdjb1I6tb6ZgUI0QPLQ/exec';
 export const SPREADSHEET_ID = '1ujQI5dMhPBr-d1H8w_r_btiBQfdZRSLKao52qXYUja0';
 export const SPREADSHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 export const BATAS_JAM_MASUK = '07:00';
