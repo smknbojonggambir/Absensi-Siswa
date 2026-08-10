@@ -6,6 +6,64 @@ export const SPREADSHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPR
 export const SPREADSHEET_SISWA_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=DataSiswa`;
 export const BATAS_JAM_MASUK = '07:00';
 
+export function normalizeDateStr(rawDateStr: string): string {
+  if (!rawDateStr) return '';
+  let str = String(rawDateStr).trim();
+  if (str.includes(' ')) {
+    str = str.split(' ')[0];
+  } else if (str.includes('T')) {
+    str = str.split('T')[0];
+  }
+
+  // Check YYYY-MM-DD or YYYY-M-D or DD-MM-YYYY
+  if (str.includes('-')) {
+    const parts = str.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        const y = parts[0];
+        const m = parts[1].padStart(2, '0');
+        const d = parts[2].padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      } else if (parts[2].length === 4) {
+        const d = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        const y = parts[2];
+        return `${y}-${m}-${d}`;
+      }
+    }
+  }
+
+  // Check DD/MM/YYYY or D/M/YYYY or YYYY/MM/DD
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      if (parts[2].length === 4 || parts[2].length === 2) {
+        const d = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        let y = parts[2];
+        if (y.length === 2) y = '20' + y;
+        return `${y}-${m}-${d}`;
+      } else if (parts[0].length === 4) {
+        const y = parts[0];
+        const m = parts[1].padStart(2, '0');
+        const d = parts[2].padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+    }
+  }
+
+  // Fallback if valid JS date
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  return str;
+}
+
 export function parseCSV(csvText: string): string[][] {
   const lines: string[][] = [];
   let row: string[] = [];
@@ -91,7 +149,7 @@ export async function fetchDirectSpreadsheetData(): Promise<AbsenRecord[]> {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         return data.map((d: any) => ({
-          tanggal: d.tanggal || '',
+          tanggal: normalizeDateStr(d.tanggal || d.tgl || ''),
           waktu: d.jam || d.waktu || '-',
           nis: d.nisn || d.nis || '-',
           nama: d.nama || '',
@@ -144,7 +202,7 @@ export async function fetchDirectSpreadsheetData(): Promise<AbsenRecord[]> {
 
         if (namaRaw && kelasRaw) {
           records.push({
-            tanggal: cleanDate,
+            tanggal: normalizeDateStr(cleanDate),
             waktu: waktu,
             nis: nisRaw,
             nama: namaRaw,
@@ -259,14 +317,17 @@ export async function fetchSiswa(kelas: string): Promise<Siswa[]> {
 
 export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: string): Promise<AbsenRecord[]> {
   let scriptRecords: AbsenRecord[] = [];
+  const startNorm = normalizeDateStr(tglMulai);
+  const endNorm = normalizeDateStr(tglAkhir);
+
   try {
-    const url = `${SCRIPT_URL}?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`;
+    const url = `${SCRIPT_URL}?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${startNorm || tglMulai}&tglAkhir=${endNorm || tglAkhir}`;
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
         scriptRecords = data.map((d: any) => ({
-          tanggal: d.tanggal || '',
+          tanggal: normalizeDateStr(d.tanggal || d.tgl || ''),
           waktu: d.jam || d.waktu || '-',
           nis: d.nisn || d.nis || '-',
           nama: d.nama || '',
@@ -297,10 +358,11 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
     }
 
     let matchDate = true;
-    if (tglMulai && tglAkhir) {
-      matchDate = rec.tanggal >= tglMulai && rec.tanggal <= tglAkhir;
-    } else if (tglMulai) {
-      matchDate = rec.tanggal === tglMulai;
+    const normRecDate = normalizeDateStr(rec.tanggal);
+    if (startNorm && endNorm) {
+      matchDate = normRecDate >= startNorm && normRecDate <= endNorm;
+    } else if (startNorm) {
+      matchDate = normRecDate === startNorm;
     }
 
     return matchKelas && matchDate;

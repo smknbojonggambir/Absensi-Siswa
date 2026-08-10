@@ -614,6 +614,26 @@ th { background: #f8fafc; font-weight: 700; color: #475569; text-transform: uppe
     margin-top: 10px !important;
   }
 
+  /* Un-sticky table columns when printing */
+  .data-table .sticky-col-1,
+  .data-table .sticky-col-2,
+  .data-table .sticky-col-3,
+  .data-table th.sticky-col-1,
+  .data-table th.sticky-col-2,
+  .data-table th.sticky-col-3 {
+    position: static !important;
+    background-color: transparent !important;
+    border-right: 1px solid #000000 !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tbody {
+    display: table-row-group !important;
+  }
+
   table.data-table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -639,6 +659,7 @@ th { background: #f8fafc; font-weight: 700; color: #475569; text-transform: uppe
 
   tr {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Stats Grid Cetak */
