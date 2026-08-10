@@ -89,20 +89,54 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
     setHasLoaded(false);
 
     try {
-      const data = await fetchLaporan(selectedKelas, m, s);
+      const rawData = await fetchLaporan(selectedKelas, m, s);
+
+      // Strictly filter attendance data by selected class if specified
+      const data = selectedKelas
+        ? rawData.filter(
+            (d) =>
+              d.kelas &&
+              d.kelas.replace(/\s+/g, ' ').trim().toLowerCase() === selectedKelas.replace(/\s+/g, ' ').trim().toLowerCase()
+          )
+        : rawData;
+
       const days = Array.from(new Set(data.map((d) => d.tanggal)));
       if (days.length === 0 && m) days.push(m);
       setUniqueDays(days);
 
-      // Identify targets
+      // Fetch master student list for selected class
+      let masterSiswaList: Siswa[] = siswaFilterList;
+      if (selectedKelas) {
+        try {
+          const freshSiswa = await fetchSiswa(selectedKelas);
+          if (freshSiswa && freshSiswa.length > 0) {
+            masterSiswaList = freshSiswa;
+            setSiswaFilterList(freshSiswa);
+          }
+        } catch (err) {
+          console.warn('Could not fetch fresh student list for class:', err);
+        }
+      }
+
+      // Identify target students for this report
       let targetSiswa: { nama: string; nis: string; kelas: string }[] = [];
-      if (selectedKelas && siswaFilterList.length > 0) {
-        targetSiswa = siswaFilterList.map((st) => ({
-          nama: st.nama,
-          nis: st.nis || '-',
-          kelas: selectedKelas,
-        }));
-      } else {
+
+      if (selectedKelas && masterSiswaList.length > 0) {
+        targetSiswa = masterSiswaList
+          .filter(
+            (st) =>
+              !st.kelas ||
+              st.kelas.replace(/\s+/g, ' ').trim().toLowerCase() === selectedKelas.replace(/\s+/g, ' ').trim().toLowerCase()
+          )
+          .map((st) => ({
+            nama: st.nama,
+            nis: st.nis || '-',
+            kelas: selectedKelas,
+          }));
+      }
+
+      // Fallback: use students present in filtered data if targetSiswa is empty
+      if (targetSiswa.length === 0) {
         const uniqueMap = new Map<string, { nis: string; kelas: string }>();
         data.forEach((d) => {
           if (!uniqueMap.has(d.nama)) {
@@ -120,36 +154,33 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
         targetSiswa = targetSiswa.filter((st) => st.nama === selectedSiswa);
       }
 
-      // Enrich missing days as Alpha
-      const enriched: AbsenRecord[] = [...data];
-      targetSiswa.forEach((siswa) => {
-        days.forEach((day) => {
-          const hasRecord = data.find(
-            (d) =>
-              d.nama.trim().toLowerCase() === siswa.nama.trim().toLowerCase() &&
-              d.tanggal === day &&
-              d.status !== 'Pulang'
-          );
-
-          if (!hasRecord) {
-            enriched.push({
-              tanggal: day,
-              waktu: '-',
-              nis: siswa.nis || '-',
-              nama: siswa.nama,
-              kelas: siswa.kelas,
-              status: 'Alpha',
-              ket: 'Tanpa Keterangan',
-            });
-          }
-        });
-      });
-
-      // Filter by selected student if specified
-      let finalRecords = enriched;
+      // Keep raw records strictly as recorded (do NOT auto-fill missing days as Alpha)
+      let finalRecords = [...data];
       if (selectedSiswa) {
         finalRecords = finalRecords.filter((d) => d.nama === selectedSiswa);
       }
+
+      // Auto-populate missing NIS from master student list lookup
+      const nisLookup = new Map<string, string>();
+      masterSiswaList.forEach((s) => {
+        if (s.nama && s.nis && s.nis !== '-') {
+          nisLookup.set(s.nama.trim().toLowerCase(), s.nis);
+        }
+      });
+      targetSiswa.forEach((s) => {
+        if (s.nama && s.nis && s.nis !== '-') {
+          nisLookup.set(s.nama.trim().toLowerCase(), s.nis);
+        }
+      });
+
+      finalRecords.forEach((rec) => {
+        if ((!rec.nis || rec.nis === '-') && rec.nama) {
+          const foundNis = nisLookup.get(rec.nama.trim().toLowerCase());
+          if (foundNis) {
+            rec.nis = foundNis;
+          }
+        }
+      });
 
       // Sort records
       finalRecords.sort((a, b) => {
@@ -232,6 +263,62 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
     }
   };
 
+  // Helper to compute 5 weekday dates for Weekly Rekap (Senin - Jumat)
+  const weeklyDays = useMemo(() => {
+    const ref = tglMulai || todayStr;
+    const d = new Date(ref + 'T00:00:00');
+    const day = d.getDay();
+    const diffToMon = day === 0 ? -6 : 1 - day;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diffToMon);
+
+    const days = [];
+    const labels = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+    for (let i = 0; i < 5; i++) {
+      const cur = new Date(monday);
+      cur.setDate(monday.getDate() + i);
+      const dateStr = cur.toISOString().split('T')[0];
+      const shortLabel = `${cur.getDate()}/${cur.getMonth() + 1}`;
+      days.push({ label: labels[i], dateStr, shortLabel });
+    }
+    return days;
+  }, [tglMulai, todayStr]);
+
+  // Helper to compute all days in the month for Monthly Rekap (1..N)
+  const monthlyDays = useMemo(() => {
+    const ref = tglMulai || todayStr;
+    const d = new Date(ref + 'T00:00:00');
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const days = [];
+    for (let i = 1; i <= totalDays; i++) {
+      const padDay = i < 10 ? `0${i}` : `${i}`;
+      const padMonth = month + 1 < 10 ? `0${month + 1}` : `${month + 1}`;
+      const dateStr = `${year}-${padMonth}-${padDay}`;
+      days.push({ dayNum: i, dateStr });
+    }
+    const monthName = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    return { year, month, monthName, totalDays, days };
+  }, [tglMulai, todayStr]);
+
+  // Helper to look up attendance status code ('H', 'S', 'I', 'A', or '-')
+  const getAttendanceCode = (nama: string, dateStr: string) => {
+    const rec = rawRecords.find(
+      (r) =>
+        r.nama.trim().toLowerCase() === nama.trim().toLowerCase() &&
+        r.tanggal === dateStr &&
+        r.status !== 'Pulang'
+    );
+    if (!rec) return '-';
+    if (rec.status === 'Hadir') return 'H';
+    if (rec.status === 'Sakit') return 'S';
+    if (rec.status === 'Izin') return 'I';
+    if (rec.status === 'Alpha') return 'A';
+    return '-';
+  };
+
   const getAutoFilename = (ext: 'csv' | 'pdf') => {
     const kls = selectedKelas ? selectedKelas.replace(/[^a-zA-Z0-9]/g, '_') : 'Semua_Kelas';
     let periodeLabel = 'Harian';
@@ -252,23 +339,76 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
 
   const generateCSVText = () => {
     if (tampilanMode === 'rekap') {
-      const headers = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir (H)', 'Sakit (S)', 'Izin (I)', 'Alpha (A)', 'Terlambat (T)', 'Total Hari', 'Persentase Kehadiran (%)'];
-      const rows = filteredRekapList.map((st, idx) => [
-        idx + 1,
-        `"${(st.nis || '-').replace(/"/g, '""')}"`,
-        `"${st.nama.replace(/"/g, '""')}"`,
-        `"${st.kelas.replace(/"/g, '""')}"`,
-        st.hadir,
-        st.sakit,
-        st.izin,
-        st.alpha,
-        st.terlambat,
-        st.totalHari,
-        `"${st.persentase}%"`,
-      ]);
-      return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      if (lapPeriode === 'range') {
+        const headers = ['No', 'NIS/NISN', 'Nama Siswa', 'Kelas', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Total Hadir', 'Sakit', 'Izin', 'Alpa'];
+        const rows = filteredRekapList.map((st, idx) => {
+          let h = 0, s = 0, i = 0, a = 0;
+          const codes = weeklyDays.map((wd) => {
+            const code = getAttendanceCode(st.nama, wd.dateStr);
+            if (code === 'H') h++;
+            if (code === 'S') s++;
+            if (code === 'I') i++;
+            if (code === 'A') a++;
+            return code;
+          });
+          return [
+            idx + 1,
+            `"${(st.nis || '-').replace(/"/g, '""')}"`,
+            `"${st.nama.replace(/"/g, '""')}"`,
+            `"${st.kelas.replace(/"/g, '""')}"`,
+            ...codes,
+            h,
+            s,
+            i,
+            a,
+          ];
+        });
+        return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      } else if (lapPeriode === 'bulanan') {
+        const dateHeaders = monthlyDays.days.map((d) => d.dayNum.toString());
+        const headers = ['No', 'NIS/NISN', 'Nama Siswa', 'Kelas', ...dateHeaders, 'Total Hadir (H)', 'Total Sakit (S)', 'Total Izin (I)', 'Total Alpa (A)'];
+        const rows = filteredRekapList.map((st, idx) => {
+          let h = 0, s = 0, i = 0, a = 0;
+          const codes = monthlyDays.days.map((md) => {
+            const code = getAttendanceCode(st.nama, md.dateStr);
+            if (code === 'H') h++;
+            if (code === 'S') s++;
+            if (code === 'I') i++;
+            if (code === 'A') a++;
+            return code;
+          });
+          return [
+            idx + 1,
+            `"${(st.nis || '-').replace(/"/g, '""')}"`,
+            `"${st.nama.replace(/"/g, '""')}"`,
+            `"${st.kelas.replace(/"/g, '""')}"`,
+            ...codes,
+            h,
+            s,
+            i,
+            a,
+          ];
+        });
+        return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      } else {
+        const headers = ['No', 'NIS/NISN', 'Nama Siswa', 'Kelas', 'Hadir (H)', 'Sakit (S)', 'Izin (I)', 'Alpha (A)', 'Terlambat (T)', 'Total Hari', 'Persentase Kehadiran (%)'];
+        const rows = filteredRekapList.map((st, idx) => [
+          idx + 1,
+          `"${(st.nis || '-').replace(/"/g, '""')}"`,
+          `"${st.nama.replace(/"/g, '""')}"`,
+          `"${st.kelas.replace(/"/g, '""')}"`,
+          st.hadir,
+          st.sakit,
+          st.izin,
+          st.alpha,
+          st.terlambat,
+          st.totalHari,
+          `"${st.persentase}%"`,
+        ]);
+        return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      }
     } else {
-      const headers = ['No', 'NIS', 'Tanggal', 'Jam', 'Nama Siswa', 'Kelas', 'Status', 'Keterangan'];
+      const headers = ['No', 'NIS/NISN', 'Tanggal', 'Jam', 'Nama Siswa', 'Kelas', 'Status', 'Keterangan'];
       const rows = filteredRawList.map((d, i) => [
         i + 1,
         `"${(d.nis || '-').replace(/"/g, '""')}"`,
@@ -401,24 +541,55 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
       let tableData: (string | number)[][] = [];
 
       if (tampilanMode === 'rekap') {
-        tableHeaders = [['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir (H)', 'Sakit (S)', 'Izin (I)', 'Alpha (A)', 'Terlambat', 'Total Hari', '% Kehadiran']];
-        tableData = filteredRekapList.map((st, idx) => [
-          idx + 1,
-          st.nis || '-',
-          st.nama,
-          st.kelas,
-          st.hadir,
-          st.sakit,
-          st.izin,
-          st.alpha,
-          st.terlambat,
-          st.totalHari,
-          `${st.persentase}%`
-        ]);
+        if (lapPeriode === 'range') {
+          tableHeaders = [['No', 'NIS/NISN', 'Nama Siswa', 'Kelas', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'H', 'S', 'I', 'A']];
+          tableData = filteredRekapList.map((st, idx) => {
+            let h = 0, s = 0, i = 0, a = 0;
+            const codes = weeklyDays.map((wd) => {
+              const c = getAttendanceCode(st.nama, wd.dateStr);
+              if (c === 'H') h++;
+              if (c === 'S') s++;
+              if (c === 'I') i++;
+              if (c === 'A') a++;
+              return c;
+            });
+            return [idx + 1, st.nis || '-', st.nama, st.kelas, ...codes, h, s, i, a];
+          });
+        } else if (lapPeriode === 'bulanan') {
+          const dayHeaders = monthlyDays.days.map((d) => d.dayNum.toString());
+          tableHeaders = [['No', 'NIS/NISN', 'Nama Siswa', ...dayHeaders, 'H', 'S', 'I', 'A']];
+          tableData = filteredRekapList.map((st, idx) => {
+            let h = 0, s = 0, i = 0, a = 0;
+            const codes = monthlyDays.days.map((md) => {
+              const c = getAttendanceCode(st.nama, md.dateStr);
+              if (c === 'H') h++;
+              if (c === 'S') s++;
+              if (c === 'I') i++;
+              if (c === 'A') a++;
+              return c;
+            });
+            return [idx + 1, st.nis || '-', st.nama, ...codes, h, s, i, a];
+          });
+        } else {
+          tableHeaders = [['No', 'NIS/NISN', 'Nama Siswa', 'Kelas', 'Hadir (H)', 'Sakit (S)', 'Izin (I)', 'Alpha (A)', 'Terlambat', 'Total Hari', '% Kehadiran']];
+          tableData = filteredRekapList.map((st, idx) => [
+            idx + 1,
+            st.nis || '-',
+            st.nama,
+            st.kelas,
+            st.hadir,
+            st.sakit,
+            st.izin,
+            st.alpha,
+            st.terlambat,
+            st.totalHari,
+            `${st.persentase}%`
+          ]);
+        }
       } else {
         tableHeaders = lapPeriode === 'harian'
-          ? [['No', 'NIS', 'Tanggal', 'Jam', 'Nama Siswa', 'Kelas', 'Status', 'Keterangan']]
-          : [['No', 'NIS', 'Tanggal & Jam', 'Nama Siswa', 'Kelas', 'Status', 'Keterangan']];
+          ? [['No', 'NIS/NISN', 'Tanggal', 'Jam', 'Nama Siswa', 'Kelas', 'Status', 'Keterangan']]
+          : [['No', 'NIS/NISN', 'Tanggal & Jam', 'Nama Siswa', 'Kelas', 'Status', 'Keterangan']];
         tableData = filteredRawList.map((d, i) => lapPeriode === 'harian'
           ? [i + 1, d.nis || '-', d.tanggal, d.waktu, d.nama, d.kelas, d.status, d.ket || '-']
           : [i + 1, d.nis || '-', `${d.tanggal} (${d.waktu})`, d.nama, d.kelas, d.status, d.ket || '-']
@@ -430,12 +601,18 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
         body: tableData,
         startY: 62,
         margin: { left: marginX, right: marginX },
-        styles: { fontSize: 8, cellPadding: 2, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        styles: {
+          fontSize: lapPeriode === 'bulanan' ? 6 : 8,
+          cellPadding: lapPeriode === 'bulanan' ? 1 : 2,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+          halign: 'center',
+        },
         headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold', halign: 'center' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 10 },
-          1: { halign: 'center', cellWidth: 24 },
+          0: { halign: 'center', cellWidth: 8 },
+          1: { halign: 'center', cellWidth: 18 },
         },
       });
 
@@ -1000,8 +1177,157 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
 
           {/* MAIN DATA TABLES */}
 
-          {/* MODE 1: REKAPITULASI PER SISWA (SUMMARY MATRIX) */}
-          {tampilanMode === 'rekap' && (
+          {/* MODE 1: REKAPITULASI MINGGUAN (SENIN - JUMAT) */}
+          {tampilanMode === 'rekap' && lapPeriode === 'range' && (
+            <div className="table-responsive print-table-wrapper" style={{ marginBottom: '20px' }}>
+              <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 4px 12px' }}>
+                <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>
+                  📊 {isEn ? 'Weekly Attendance Report (Senin - Jumat)' : 'Tabel Rekap Presensi Mingguan (Senin - Jumat)'}
+                </h4>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                  {isEn ? `Showing ${filteredRekapList.length} students` : `Menampilkan ${filteredRekapList.length} siswa`}
+                </span>
+              </div>
+              <table id="tabelRekapMingguan" className="data-table">
+                <thead>
+                  <tr>
+                    <th className="sticky-col-1">No.</th>
+                    <th className="sticky-col-2">NIS/NISN</th>
+                    <th className="sticky-col-3">{isEn ? 'Student Name' : 'Nama Siswa'}</th>
+                    {weeklyDays.map((wd) => (
+                      <th key={wd.dateStr} style={{ textAlign: 'center', minWidth: '75px' }}>
+                        {wd.label}<br />
+                        <span style={{ fontSize: '9px', fontWeight: 500, color: '#64748b' }}>{wd.shortLabel}</span>
+                      </th>
+                    ))}
+                    <th style={{ textAlign: 'center', minWidth: '80px', backgroundColor: '#dcfce7', color: '#166534' }}>Total Hadir</th>
+                    <th style={{ textAlign: 'center', minWidth: '60px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>Sakit</th>
+                    <th style={{ textAlign: 'center', minWidth: '60px', backgroundColor: '#ffedd5', color: '#c2410c' }}>Izin</th>
+                    <th style={{ textAlign: 'center', minWidth: '60px', backgroundColor: '#fee2e2', color: '#991b1b' }}>Alpa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRekapList.length === 0 ? (
+                    <tr>
+                      <td colSpan={12} style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                        {isEn ? 'No attendance records found.' : 'Belum ada data absensi pada minggu ini.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRekapList.map((st, idx) => {
+                      let totH = 0, totS = 0, totI = 0, totA = 0;
+                      const codes = weeklyDays.map((wd) => {
+                        const code = getAttendanceCode(st.nama, wd.dateStr);
+                        if (code === 'H') totH++;
+                        if (code === 'S') totS++;
+                        if (code === 'I') totI++;
+                        if (code === 'A') totA++;
+                        return code;
+                      });
+
+                      return (
+                        <tr key={st.nama + idx}>
+                          <td className="sticky-col-1">{idx + 1}</td>
+                          <td className="sticky-col-2">{st.nis || '-'}</td>
+                          <td className="sticky-col-3" style={{ fontWeight: 600 }}>{st.nama}</td>
+                          {codes.map((code, i) => (
+                            <td key={i} style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                              {code === 'H' && <span style={{ color: '#166534' }}>H</span>}
+                              {code === 'S' && <span style={{ color: '#0369a1' }}>S</span>}
+                              {code === 'I' && <span style={{ color: '#c2410c' }}>I</span>}
+                              {code === 'A' && <span style={{ color: '#dc2626' }}>A</span>}
+                              {code === '-' && <span style={{ color: '#cbd5e1' }}>-</span>}
+                            </td>
+                          ))}
+                          <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#166534', backgroundColor: '#f0fdf4' }}>{totH}</td>
+                          <td style={{ textAlign: 'center', color: '#0369a1', backgroundColor: '#f0f9ff' }}>{totS}</td>
+                          <td style={{ textAlign: 'center', color: '#c2410c', backgroundColor: '#fff7ed' }}>{totI}</td>
+                          <td style={{ textAlign: 'center', color: '#dc2626', fontWeight: 'bold', backgroundColor: '#fef2f2' }}>{totA}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* MODE 2: REKAPITULASI BULANAN (TANGGAL 1..N) */}
+          {tampilanMode === 'rekap' && lapPeriode === 'bulanan' && (
+            <div className="table-responsive print-table-wrapper" style={{ marginBottom: '20px' }}>
+              <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 4px 12px' }}>
+                <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>
+                  📊 {isEn ? `Monthly Attendance Report (${monthlyDays.monthName})` : `Tabel Rekap Presensi Bulanan (${monthlyDays.monthName})`}
+                </h4>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                  {isEn ? `Showing ${filteredRekapList.length} students, ${monthlyDays.totalDays} days` : `Menampilkan ${filteredRekapList.length} siswa, ${monthlyDays.totalDays} hari`}
+                </span>
+              </div>
+              <table id="tabelRekapBulanan" className="data-table">
+                <thead>
+                  <tr>
+                    <th className="sticky-col-1">No.</th>
+                    <th className="sticky-col-2">NIS/NISN</th>
+                    <th className="sticky-col-3">{isEn ? 'Student Name' : 'Nama Siswa'}</th>
+                    {monthlyDays.days.map((d) => (
+                      <th key={d.dayNum} style={{ textAlign: 'center', minWidth: '28px', padding: '8px 4px', fontSize: '10px' }}>
+                        {d.dayNum}
+                      </th>
+                    ))}
+                    <th style={{ textAlign: 'center', minWidth: '36px', backgroundColor: '#dcfce7', color: '#166534' }}>H</th>
+                    <th style={{ textAlign: 'center', minWidth: '36px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>S</th>
+                    <th style={{ textAlign: 'center', minWidth: '36px', backgroundColor: '#ffedd5', color: '#c2410c' }}>I</th>
+                    <th style={{ textAlign: 'center', minWidth: '36px', backgroundColor: '#fee2e2', color: '#991b1b' }}>A</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRekapList.length === 0 ? (
+                    <tr>
+                      <td colSpan={monthlyDays.totalDays + 7} style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                        {isEn ? 'No attendance records found.' : 'Belum ada data absensi pada bulan ini.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRekapList.map((st, idx) => {
+                      let totH = 0, totS = 0, totI = 0, totA = 0;
+                      const codes = monthlyDays.days.map((md) => {
+                        const code = getAttendanceCode(st.nama, md.dateStr);
+                        if (code === 'H') totH++;
+                        if (code === 'S') totS++;
+                        if (code === 'I') totI++;
+                        if (code === 'A') totA++;
+                        return code;
+                      });
+
+                      return (
+                        <tr key={st.nama + idx}>
+                          <td className="sticky-col-1">{idx + 1}</td>
+                          <td className="sticky-col-2">{st.nis || '-'}</td>
+                          <td className="sticky-col-3" style={{ fontWeight: 600 }}>{st.nama}</td>
+                          {codes.map((code, i) => (
+                            <td key={i} style={{ textAlign: 'center', padding: '6px 2px', fontSize: '11px', fontWeight: 'bold' }}>
+                              {code === 'H' && <span style={{ color: '#166534' }}>H</span>}
+                              {code === 'S' && <span style={{ color: '#0369a1' }}>S</span>}
+                              {code === 'I' && <span style={{ color: '#c2410c' }}>I</span>}
+                              {code === 'A' && <span style={{ color: '#dc2626' }}>A</span>}
+                              {code === '-' && <span style={{ color: '#cbd5e1' }}>-</span>}
+                            </td>
+                          ))}
+                          <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#166534', backgroundColor: '#f0fdf4' }}>{totH}</td>
+                          <td style={{ textAlign: 'center', color: '#0369a1', backgroundColor: '#f0f9ff' }}>{totS}</td>
+                          <td style={{ textAlign: 'center', color: '#c2410c', backgroundColor: '#fff7ed' }}>{totI}</td>
+                          <td style={{ textAlign: 'center', color: '#dc2626', fontWeight: 'bold', backgroundColor: '#fef2f2' }}>{totA}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* MODE 3: REKAPITULASI SUMMARY STANDARD */}
+          {tampilanMode === 'rekap' && lapPeriode !== 'range' && lapPeriode !== 'bulanan' && (
             <div className="table-responsive print-table-wrapper" style={{ marginBottom: '20px' }}>
               <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 4px 12px' }}>
                 <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>
@@ -1014,8 +1340,8 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
               <table id="tabelRekapMatrix" className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '4%' }}>No</th>
-                    <th style={{ width: '12%' }}>NIS</th>
+                    <th style={{ width: '4%' }}>No.</th>
+                    <th style={{ width: '12%' }}>NIS/NISN</th>
                     <th>{isEn ? 'Student Name' : 'Nama Siswa'}</th>
                     <th style={{ width: '10%' }}>{isEn ? 'Class' : 'Kelas'}</th>
                     <th style={{ width: '7%', textAlign: 'center' }}>Hadir (H)</th>

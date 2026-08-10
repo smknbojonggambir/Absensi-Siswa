@@ -1,8 +1,9 @@
 import { AbsenRecord, Siswa, StatusAbsen } from '../types';
 
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPLKkMwEFk-taHlK3_qRlZ-7iCxXhCtELRXk-NgMAUXqxvBlfASOpDQhU2qVXlX_jYuQ/exec';
-export const SPREADSHEET_ID = '1pL0Xms2OrTJ0b5lRTaKpsQUNtuCub5QT';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxc77xA8sZbYLpc8_IMJDiA3rh1RoseOlhseyh2GS-neWLXAW2gkOC5ajGja68N66YHxw/exec';
+export const SPREADSHEET_ID = '1_Zts99iIgy3L7TKCtADv25P6pTeGLmD3rvRWQ7RMWIA';
 export const SPREADSHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
+export const SPREADSHEET_SISWA_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=DataSiswa`;
 export const BATAS_JAM_MASUK = '07:00';
 
 export function parseCSV(csvText: string): string[][] {
@@ -46,11 +47,71 @@ export function parseCSV(csvText: string): string[][] {
   return lines;
 }
 
+export interface RawSiswaRow {
+  nis: string;
+  nama: string;
+  kelas: string;
+  jurusan?: string;
+}
+
+export async function fetchDirectSiswaCSV(): Promise<RawSiswaRow[]> {
+  try {
+    const res = await fetch(SPREADSHEET_SISWA_CSV_URL);
+    if (!res.ok) return [];
+    const text = await res.text();
+    if (!text || text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+      return [];
+    }
+    const rows = parseCSV(text);
+    const dataRows = rows.slice(1);
+    const result: RawSiswaRow[] = [];
+
+    dataRows.forEach((cols) => {
+      if (cols.length >= 3) {
+        const nis = cols[0] || '-';
+        const nama = cols[1] || '';
+        const kelas = cols[2] || '';
+        const jurusan = cols[3] || '';
+
+        if (nama && kelas) {
+          result.push({ nis, nama, kelas, jurusan });
+        }
+      }
+    });
+    return result;
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchDirectSpreadsheetData(): Promise<AbsenRecord[]> {
   try {
+    const res = await fetch(SCRIPT_URL);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((d: any) => ({
+          tanggal: d.tanggal || '',
+          waktu: d.jam || d.waktu || '-',
+          nis: d.nisn || d.nis || '-',
+          nama: d.nama || '',
+          kelas: d.kelas || '',
+          status: d.status || 'Hadir',
+          ket: d.keterangan || d.ket || '',
+        }));
+      }
+    }
+  } catch {
+    // Ignore script fetch error, try CSV fallback next
+  }
+
+  try {
     const res = await fetch(SPREADSHEET_CSV_URL);
-    if (!res.ok) throw new Error('Failed to fetch spreadsheet CSV');
+    if (!res.ok) return [];
     const text = await res.text();
+    if (!text || text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+      return [];
+    }
     const rows = parseCSV(text);
 
     // Skip header row
@@ -96,8 +157,7 @@ export async function fetchDirectSpreadsheetData(): Promise<AbsenRecord[]> {
     });
 
     return records;
-  } catch (err) {
-    console.error('Error fetching direct spreadsheet data:', err);
+  } catch {
     return [];
   }
 }
@@ -107,19 +167,34 @@ export async function fetchKelas(): Promise<string[]> {
     const res = await fetch(`${SCRIPT_URL}?action=getKelas`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data) && data.length > 0) {
+        return data.filter(Boolean).sort();
+      }
     }
   } catch (err) {
-    console.warn('Google Apps Script fetchKelas failed, falling back to direct sheet:', err);
+    console.warn('Google Apps Script fetchKelas failed, fallback to direct sheet:', err);
   }
 
-  // Fallback to direct Spreadsheet CSV
-  const directData = await fetchDirectSpreadsheetData();
-  const kelasSet = new Set<string>();
-  directData.forEach((rec) => {
-    if (rec.kelas) kelasSet.add(rec.kelas);
-  });
-  return Array.from(kelasSet).sort();
+  // Fallback to direct CSV if Apps Script unavailable
+  try {
+    const kelasSet = new Set<string>();
+    const directSiswa = await fetchDirectSiswaCSV();
+    directSiswa.forEach((item) => {
+      if (item.kelas) kelasSet.add(item.kelas);
+    });
+
+    if (kelasSet.size === 0) {
+      const directAbsen = await fetchDirectSpreadsheetData();
+      directAbsen.forEach((rec) => {
+        if (rec.kelas) kelasSet.add(rec.kelas);
+      });
+    }
+
+    return Array.from(kelasSet).sort();
+  } catch (err) {
+    console.error('Fallback fetchKelas failed:', err);
+    return [];
+  }
 }
 
 export async function fetchSiswa(kelas: string): Promise<Siswa[]> {
@@ -127,30 +202,59 @@ export async function fetchSiswa(kelas: string): Promise<Siswa[]> {
     const res = await fetch(`${SCRIPT_URL}?action=getSiswa&kelas=${encodeURIComponent(kelas)}`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) return data;
-    }
-  } catch (err) {
-    console.warn('Google Apps Script fetchSiswa failed, falling back to direct sheet:', err);
-  }
-
-  // Fallback to direct Spreadsheet CSV
-  const directData = await fetchDirectSpreadsheetData();
-  const siswaMap = new Map<string, string>();
-  directData.forEach((rec) => {
-    if (rec.kelas.toLowerCase() === kelas.toLowerCase() && rec.nama) {
-      if (!siswaMap.has(rec.nama)) {
-        siswaMap.set(rec.nama, rec.nis || '-');
+      if (Array.isArray(data) && data.length > 0) {
+        const list = data.map((s: { nama: string; nis: string; kelas?: string }) => ({
+          nama: s.nama,
+          nis: s.nis || '-',
+          kelas: s.kelas || kelas,
+        }));
+        list.sort((a, b) => a.nama.localeCompare(b.nama));
+        return list;
       }
     }
-  });
+  } catch (err) {
+    console.warn('Google Apps Script fetchSiswa failed, fallback to direct sheet:', err);
+  }
 
-  const siswaList: Siswa[] = Array.from(siswaMap.entries()).map(([nama, nis]) => ({
-    nama,
-    nis,
-  }));
+  // Fallback to direct CSV if Apps Script unavailable
+  try {
+    const siswaMap = new Map<string, string>();
+    const targetKelasNorm = kelas.replace(/\s+/g, ' ').trim().toLowerCase();
 
-  siswaList.sort((a, b) => a.nama.localeCompare(b.nama));
-  return siswaList;
+    const directSiswa = await fetchDirectSiswaCSV();
+    directSiswa.forEach((item) => {
+      const itemKelasNorm = item.kelas.replace(/\s+/g, ' ').trim().toLowerCase();
+      if (itemKelasNorm === targetKelasNorm && item.nama) {
+        if (!siswaMap.has(item.nama)) {
+          siswaMap.set(item.nama, item.nis || '-');
+        }
+      }
+    });
+
+    if (siswaMap.size === 0) {
+      const directAbsen = await fetchDirectSpreadsheetData();
+      directAbsen.forEach((rec) => {
+        const recKelasNorm = rec.kelas.replace(/\s+/g, ' ').trim().toLowerCase();
+        if (recKelasNorm === targetKelasNorm && rec.nama) {
+          if (!siswaMap.has(rec.nama)) {
+            siswaMap.set(rec.nama, rec.nis || '-');
+          }
+        }
+      });
+    }
+
+    const siswaList: Siswa[] = Array.from(siswaMap.entries()).map(([nama, nis]) => ({
+      nama,
+      nis,
+      kelas,
+    }));
+
+    siswaList.sort((a, b) => a.nama.localeCompare(b.nama));
+    return siswaList;
+  } catch (err) {
+    console.error('Fallback fetchSiswa failed:', err);
+    return [];
+  }
 }
 
 export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: string): Promise<AbsenRecord[]> {
@@ -159,20 +263,37 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
     const url = `${SCRIPT_URL}?action=getLaporan&kelas=${encodeURIComponent(kelas)}&tglMulai=${tglMulai}&tglAkhir=${tglAkhir}`;
     const res = await fetch(url);
     if (res.ok) {
-      scriptRecords = await res.json();
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        scriptRecords = data.map((d: any) => ({
+          tanggal: d.tanggal || '',
+          waktu: d.jam || d.waktu || '-',
+          nis: d.nisn || d.nis || '-',
+          nama: d.nama || '',
+          kelas: d.kelas || '',
+          status: d.status || 'Hadir',
+          ket: d.keterangan || d.ket || '',
+        }));
+      }
     }
   } catch (err) {
     console.warn('Google Apps Script fetchLaporan failed, falling back to direct sheet:', err);
   }
 
-  // Also fetch direct spreadsheet records to guarantee full dataset accuracy from 1ujQI5dMhPBr-d1H8w_r_btiBQfdZRSLKao52qXYUja0
+  if (scriptRecords.length > 0) {
+    return scriptRecords;
+  }
+
+  // Fallback to direct spreadsheet records if scriptRecords was empty
   const directRecords = await fetchDirectSpreadsheetData();
+  const targetKelasNorm = kelas ? kelas.replace(/\s+/g, ' ').trim().toLowerCase() : '';
 
   // Filter direct records by date range and class
   const filteredDirect = directRecords.filter((rec) => {
     let matchKelas = true;
-    if (kelas) {
-      matchKelas = rec.kelas.toLowerCase() === kelas.toLowerCase();
+    if (targetKelasNorm) {
+      const recKelasNorm = (rec.kelas || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      matchKelas = recKelasNorm === targetKelasNorm;
     }
 
     let matchDate = true;
@@ -185,31 +306,7 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
     return matchKelas && matchDate;
   });
 
-  // Combine and deduplicate records by (tanggal + nama + status)
-  const combinedMap = new Map<string, AbsenRecord>();
-
-  [...scriptRecords, ...filteredDirect].forEach((rec) => {
-    const key = `${rec.tanggal}_${rec.nama.trim().toLowerCase()}_${rec.status}`;
-    if (!combinedMap.has(key)) {
-      combinedMap.set(key, rec);
-    } else {
-      // Enrich with NIS if existing didn't have it
-      const existing = combinedMap.get(key)!;
-      if ((!existing.nis || existing.nis === '-') && rec.nis && rec.nis !== '-') {
-        existing.nis = rec.nis;
-      }
-    }
-  });
-
-  const result = Array.from(combinedMap.values());
-  result.sort((a, b) => {
-    if (a.tanggal === b.tanggal) {
-      return a.nama.localeCompare(b.nama);
-    }
-    return a.tanggal.localeCompare(b.tanggal);
-  });
-
-  return result;
+  return filteredDirect;
 }
 
 export interface KirimPayload {
@@ -225,11 +322,32 @@ export interface KirimPayload {
 
 export async function postAbsensi(payload: KirimPayload): Promise<{ ok: boolean; message: string }> {
   try {
+    const bodyData = {
+      action: 'simpanAbsen',
+      nis: payload.nis,
+      nisn: payload.nis,
+      nama: payload.nama,
+      kelas: payload.kelas,
+      status: payload.status,
+      keterangan: payload.keterangan,
+      lat: payload.lat,
+      lng: payload.lng,
+      fotoBase64: payload.image,
+      image: payload.image,
+      jam: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      tanggal: new Date().toISOString().split('T')[0],
+    };
+
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(bodyData),
     });
-    return await res.json();
+
+    const data = await res.json();
+    if (data.ok === true || data.status === 'success') {
+      return { ok: true, message: data.message || 'Absensi berhasil disimpan!' };
+    }
+    return { ok: false, message: data.message || 'Gagal menyimpan absensi.' };
   } catch (err) {
     console.error('Error posting absensi:', err);
     return { ok: false, message: 'Gagal Konek Server.' };

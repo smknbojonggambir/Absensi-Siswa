@@ -146,13 +146,28 @@ export const FormAbsensi: React.FC<FormAbsensiProps> = ({ lang }) => {
     bukaKamera();
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setFotoBase64(reader.result);
+          stopCamera();
+          setCameraActive(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleKirim = async () => {
     if (!selectedNis) {
       alert(isEn ? 'Please select student first!' : 'Pilih siswa dulu!');
       return;
     }
     if (['Hadir', 'Pulang'].includes(status) && !fotoBase64) {
-      alert(isEn ? 'Selfie photo is mandatory!' : 'Wajib mengambil foto selfie!');
+      alert(isEn ? 'Selfie photo is mandatory!' : 'Wajib mengambil foto selfie atau upload foto!');
       return;
     }
 
@@ -190,48 +205,22 @@ export const FormAbsensi: React.FC<FormAbsensiProps> = ({ lang }) => {
       return;
     }
 
-    // 3. Location and security checks
+    // 3. Location check with graceful fallback
     setSubmitBtnText(isEn ? '📍 Getting Location...' : '📍 Mengambil Lokasi...');
     if (!navigator.geolocation) {
-      setSubmitting(false);
-      alert(isEn ? 'Browser does not support GPS.' : 'Browser tidak support GPS.');
+      await kirimKeServer({ lat: null, lng: null });
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        if (isFakeGPS(pos)) {
-          setSubmitting(false);
-          const errorText = isEn
-            ? '⚠️ Fake GPS detected! Please disable fake location.'
-            : '⚠️ Terdeteksi penggunaan Fake GPS! Harap matikan sebelum absen.';
-          alert(errorText);
-          setMsgInfo({ type: 'error', html: errorText });
-          return;
-        }
-
-        setSubmitBtnText(isEn ? '🛡️ Checking Network...' : '🛡️ Memeriksa Jaringan...');
-        const isVpnActive = await checkVPN();
-        if (isVpnActive) {
-          setSubmitting(false);
-          const vpnText = isEn
-            ? '⚠️ VPN detected! Please disable VPN before check-in.'
-            : '⚠️ Terdeteksi VPN! Harap matikan VPN sebelum absen.';
-          alert(vpnText);
-          setMsgInfo({ type: 'error', html: vpnText });
-          return;
-        }
-
         await kirimKeServer({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
-      (err) => {
-        setSubmitting(false);
-        setMsgInfo({
-          type: 'error',
-          html: isEn ? 'GPS Error or location permission denied.' : 'Gagal GPS atau izin lokasi ditolak.',
-        });
+      async (err) => {
+        console.warn('GPS location unavailable, sending without coordinates:', err);
+        await kirimKeServer({ lat: null, lng: null });
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 5000 }
     );
   };
 
@@ -371,9 +360,15 @@ export const FormAbsensi: React.FC<FormAbsensiProps> = ({ lang }) => {
             </label>
 
             {!cameraActive && !fotoBase64 && (
-              <button id="btnBukaKamera" type="button" className="btn-cam" onClick={bukaKamera}>
-                <span>{isEn ? '📷 Open Camera' : '📷 Buka Kamera'}</span>
-              </button>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <button id="btnBukaKamera" type="button" className="btn-cam" onClick={bukaKamera} style={{ flex: 1 }}>
+                  <span>{isEn ? '📷 Open Camera' : '📷 Buka Kamera'}</span>
+                </button>
+                <label className="btn-cam" style={{ flex: 1, textAlign: 'center', cursor: 'pointer', background: '#475569', margin: 0, justifyContent: 'center' }}>
+                  <span>{isEn ? '📁 Upload File' : '📁 Upload Foto'}</span>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                </label>
+              </div>
             )}
 
             {/* Camera Area */}

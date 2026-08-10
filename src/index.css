@@ -249,6 +249,45 @@ body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: v
   background: #ffffff;
 }
 
+/* Sticky columns for matrix tables */
+.data-table .sticky-col-1 {
+  position: sticky;
+  left: 0px;
+  z-index: 5;
+  background-color: #ffffff;
+  min-width: 40px;
+  text-align: center;
+}
+.data-table .sticky-col-2 {
+  position: sticky;
+  left: 40px;
+  z-index: 5;
+  background-color: #ffffff;
+  min-width: 100px;
+}
+.data-table .sticky-col-3 {
+  position: sticky;
+  left: 140px;
+  z-index: 5;
+  background-color: #ffffff;
+  min-width: 160px;
+  border-right: 2px solid #cbd5e1 !important;
+}
+
+.data-table th.sticky-col-1 {
+  z-index: 20;
+  background-color: #f1f5f9;
+}
+.data-table th.sticky-col-2 {
+  z-index: 20;
+  background-color: #f1f5f9;
+}
+.data-table th.sticky-col-3 {
+  z-index: 20;
+  background-color: #f1f5f9;
+  border-right: 2px solid #cbd5e1 !important;
+}
+
 .mode-laporan table.data-table th {
   position: sticky;
   top: 0;

@@ -5,6 +5,7 @@ export type StatusAbsen = 'Hadir' | 'Pulang' | 'Izin' | 'Sakit' | 'Alpha';
 export interface Siswa {
   nama: string;
   nis: string;
+  kelas?: string;
 }
 
 export interface AbsenRecord {
