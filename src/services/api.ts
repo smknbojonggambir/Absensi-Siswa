@@ -37,16 +37,16 @@ export function normalizeDateStr(rawDateStr: string): string {
   if (str.includes('/')) {
     const parts = str.split('/');
     if (parts.length === 3) {
-      if (parts[2].length === 4 || parts[2].length === 2) {
+      if (parts[0].length === 4) {
+        const y = parts[0];
+        const m = parts[1].padStart(2, '0');
+        const d = parts[2].padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      } else if (parts[2].length === 4 || parts[2].length === 2) {
         const d = parts[0].padStart(2, '0');
         const m = parts[1].padStart(2, '0');
         let y = parts[2];
         if (y.length === 2) y = '20' + y;
-        return `${y}-${m}-${d}`;
-      } else if (parts[0].length === 4) {
-        const y = parts[0];
-        const m = parts[1].padStart(2, '0');
-        const d = parts[2].padStart(2, '0');
         return `${y}-${m}-${d}`;
       }
     }
@@ -316,7 +316,7 @@ export async function fetchSiswa(kelas: string): Promise<Siswa[]> {
 }
 
 export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: string): Promise<AbsenRecord[]> {
-  let scriptRecords: AbsenRecord[] = [];
+  let recordsToFilter: AbsenRecord[] = [];
   const startNorm = normalizeDateStr(tglMulai);
   const endNorm = normalizeDateStr(tglAkhir);
 
@@ -325,8 +325,8 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) {
-        scriptRecords = data.map((d: any) => ({
+      if (Array.isArray(data) && data.length > 0) {
+        recordsToFilter = data.map((d: any) => ({
           tanggal: normalizeDateStr(d.tanggal || d.tgl || ''),
           waktu: d.jam || d.waktu || '-',
           nis: d.nisn || d.nis || '-',
@@ -341,16 +341,14 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
     console.warn('Google Apps Script fetchLaporan failed, falling back to direct sheet:', err);
   }
 
-  if (scriptRecords.length > 0) {
-    return scriptRecords;
+  if (recordsToFilter.length === 0) {
+    recordsToFilter = await fetchDirectSpreadsheetData();
   }
 
-  // Fallback to direct spreadsheet records if scriptRecords was empty
-  const directRecords = await fetchDirectSpreadsheetData();
   const targetKelasNorm = kelas ? kelas.replace(/\s+/g, ' ').trim().toLowerCase() : '';
 
-  // Filter direct records by date range and class
-  const filteredDirect = directRecords.filter((rec) => {
+  // Filter records strictly by date range and class
+  return recordsToFilter.filter((rec) => {
     let matchKelas = true;
     if (targetKelasNorm) {
       const recKelasNorm = (rec.kelas || '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -367,8 +365,6 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
 
     return matchKelas && matchDate;
   });
-
-  return filteredDirect;
 }
 
 export interface KirimPayload {

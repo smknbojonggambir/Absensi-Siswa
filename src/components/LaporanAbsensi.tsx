@@ -92,6 +92,8 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
       const formatD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
       m = formatD(monday);
       s = formatD(sunday);
+      setTglMulai(m);
+      setTglSelesai(s);
     } else if (lapPeriode === 'bulanan') {
       // Monthly: get 1st of month to last day of month
       const ref = tglMulai || todayStr;
@@ -104,6 +106,8 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
       const formatD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
       m = formatD(firstDay);
       s = formatD(lastDay);
+      setTglMulai(m);
+      setTglSelesai(s);
     } else {
       if (!m || !s) {
         alert(isEn ? 'Please select date range!' : 'Pilih rentang tanggal!');
@@ -260,12 +264,21 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
           item.nis = rec.nis;
         }
 
-        if (rec.status === 'Hadir') item.hadir++;
-        if (rec.status === 'Pulang') item.pulang++;
-        if (rec.status === 'Sakit') item.sakit++;
-        if (rec.status === 'Izin') item.izin++;
-        if (rec.status === 'Alpha') item.alpha++;
-        if (rec.ket && rec.ket.includes('[TERLAMBAT]')) item.terlambat++;
+        const st = (rec.status || '').trim().toLowerCase();
+        if (st === 'hadir' || st === 'h' || st === 'masuk' || st === 'pagi') item.hadir++;
+        else if (st === 'pulang') item.pulang++;
+        else if (st === 'sakit' || st === 's') item.sakit++;
+        else if (st === 'izin' || st === 'i' || st === 'dispen' || st === 'd') item.izin++;
+        else if (st === 'alpha' || st === 'alpa' || st === 'a') item.alpha++;
+        else if (st === 'terlambat' || st === 't') {
+          item.hadir++;
+          item.terlambat++;
+        } else {
+          item.hadir++;
+        }
+        if (rec.ket && rec.ket.includes('[TERLAMBAT]') && st !== 'terlambat' && st !== 't') {
+          item.terlambat++;
+        }
       });
 
       const rekapList: RekapSiswa[] = Array.from(rekapMap.values()).map((item) => {
@@ -357,31 +370,34 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
   // Helper to look up attendance status code ('H', 'S', 'I', 'A', or '-')
   const getAttendanceCode = (nama: string, nis: string | undefined, dateStr: string) => {
     const targetDate = normalizeDateStr(dateStr);
-    const targetNama = (nama || '').trim().toLowerCase();
-    const targetNis = nis && nis !== '-' ? nis.trim() : null;
+    const targetNama = (nama || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const targetNis = nis && nis !== '-' ? nis.trim().replace(/^0+/, '') : null;
 
     const rec = rawRecords.find((r) => {
       const rDate = normalizeDateStr(r.tanggal);
       if (rDate !== targetDate) return false;
-      if (r.status === 'Pulang') return false;
+      const stClean = (r.status || '').trim().toLowerCase();
+      if (stClean === 'pulang') return false;
 
       // Primary match by NIS if available
       if (targetNis && r.nis && r.nis !== '-') {
-        if (r.nis.trim() === targetNis) return true;
+        const rNisClean = r.nis.trim().replace(/^0+/, '');
+        if (rNisClean === targetNis) return true;
       }
       // Secondary match by Nama
-      if (r.nama && r.nama.trim().toLowerCase() === targetNama) return true;
+      if (r.nama && r.nama.replace(/\s+/g, ' ').trim().toLowerCase() === targetNama) return true;
 
       return false;
     });
 
     if (!rec) return '-';
     const st = (rec.status || '').trim().toLowerCase();
-    if (st === 'hadir' || st === 'h') return 'H';
+    if (st === 'hadir' || st === 'h' || st === 'masuk' || st === 'pagi') return 'H';
     if (st === 'sakit' || st === 's') return 'S';
-    if (st === 'izin' || st === 'i') return 'I';
+    if (st === 'izin' || st === 'i' || st === 'dispen' || st === 'd') return 'I';
     if (st === 'alpha' || st === 'alpa' || st === 'a') return 'A';
     if (st === 'terlambat' || st === 't') return 'H';
+    if (rec.ket && rec.ket.includes('[TERLAMBAT]')) return 'H';
     return '-';
   };
 
