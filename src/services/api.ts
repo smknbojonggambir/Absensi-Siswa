@@ -64,6 +64,23 @@ export function normalizeDateStr(rawDateStr: string): string {
   return str;
 }
 
+export function isTimeStr(str: string | undefined | null): boolean {
+  if (!str) return false;
+  const s = String(str).trim();
+  if (!s || s === '-') return false;
+  if (s.startsWith('-') || s.startsWith('107.') || s.startsWith('108.') || s.startsWith('106.')) return false;
+  if (/^-?\d+\.\d{3,}$/.test(s)) return false;
+  return /^([0-1]?\d|2[0-3])[\.:][0-5]?\d([\.:][0-5]?\d)?$/.test(s);
+}
+
+export function isCoordStr(str: string | undefined | null): boolean {
+  if (!str) return false;
+  const s = String(str).trim();
+  if (s.startsWith('-') || s.startsWith('107.') || s.startsWith('108.') || s.startsWith('106.')) return true;
+  if (/^-?\d+\.\d{3,}$/.test(s)) return true;
+  return false;
+}
+
 export function parseCSV(csvText: string): string[][] {
   const lines: string[][] = [];
   let row: string[] = [];
@@ -150,7 +167,7 @@ export async function fetchDirectSpreadsheetData(): Promise<AbsenRecord[]> {
       if (Array.isArray(data) && data.length > 0) {
         return data.map((d: any) => ({
           tanggal: normalizeDateStr(d.tanggal || d.tgl || ''),
-          waktu: d.jam || d.waktu || '-',
+          waktu: d.jam || d.waktu || d.jamInput || '-',
           nis: d.nisn || d.nis || '-',
           nama: d.nama || '',
           kelas: d.kelas || '',
@@ -177,33 +194,97 @@ export async function fetchDirectSpreadsheetData(): Promise<AbsenRecord[]> {
     const records: AbsenRecord[] = [];
 
     dataRows.forEach((cols) => {
-      if (cols.length >= 6) {
-        const timestampRaw = cols[0] || '';
-        const tanggalRaw = cols[1] || '';
-        const nisRaw = cols[2] || '-';
-        const namaRaw = cols[3] || '';
-        const kelasRaw = cols[4] || '';
-        const statusRaw = cols[5] || 'Hadir';
-        const ketRaw = cols[6] || '';
+      if (cols.length >= 5) {
+        let dateCandidate1 = normalizeDateStr(cols[1] || '');
+        let dateCandidate0 = normalizeDateStr(cols[0] || '');
 
-        let waktu = '-';
-        if (timestampRaw) {
-          const parts = timestampRaw.split(' ');
-          if (parts.length > 1) {
-            waktu = parts[1];
+        let cleanDate = '';
+        let nisRaw = '-';
+        let namaRaw = '';
+        let kelasRaw = '';
+        let statusRaw = 'Hadir';
+        let ketRaw = '';
+        let jamRaw = '-';
+
+        // Extract time across columns avoiding coordinates and URLs
+        let extractedTime = '-';
+        for (let i = 0; i < cols.length; i++) {
+          const val = cols[i] ? cols[i].trim() : '';
+          if (isTimeStr(val)) {
+            extractedTime = val;
+            break;
           }
         }
 
-        let cleanDate = tanggalRaw;
-        if (!cleanDate && timestampRaw) {
-          const parts = timestampRaw.split(' ');
-          cleanDate = parts[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateCandidate1)) {
+          // Standard layout (Col 0=ID, Col 1=Tanggal, Col 2=NISN, Col 3=Nama, Col 4=Kelas, Col 5=Status)
+          cleanDate = dateCandidate1;
+          nisRaw = cols[2] || '-';
+          namaRaw = cols[3] || '';
+          kelasRaw = cols[4] || '';
+          statusRaw = cols[5] || 'Hadir';
+          
+          if (extractedTime !== '-') {
+            jamRaw = extractedTime;
+          } else if (cols[9] && isTimeStr(cols[9])) {
+            jamRaw = cols[9].trim();
+          }
+
+          // Extract keterangan from remaining columns excluding status, time, coords, urls
+          const ketParts = cols.slice(6).filter((c) => {
+            if (!c || !c.trim()) return false;
+            const s = c.trim();
+            if (s === statusRaw || isTimeStr(s) || isCoordStr(s)) return false;
+            if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('Gagal simpan')) return false;
+            return true;
+          });
+          if (ketParts.length > 0) {
+            ketRaw = ketParts.join(' ');
+          } else if (cols[6] && !isTimeStr(cols[6]) && !isCoordStr(cols[6])) {
+            ketRaw = cols[6].trim();
+          }
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateCandidate0)) {
+          cleanDate = dateCandidate0;
+          nisRaw = cols[1] || '-';
+          namaRaw = cols[2] || '';
+          kelasRaw = cols[3] || '';
+          statusRaw = cols[4] || 'Hadir';
+
+          if (extractedTime !== '-') {
+            jamRaw = extractedTime;
+          }
+
+          const ketParts = cols.slice(5).filter((c) => {
+            if (!c || !c.trim()) return false;
+            const s = c.trim();
+            if (s === statusRaw || isTimeStr(s) || isCoordStr(s)) return false;
+            if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('Gagal simpan')) return false;
+            return true;
+          });
+          if (ketParts.length > 0) {
+            ketRaw = ketParts.join(' ');
+          }
+        } else {
+          // Fallback
+          cleanDate = dateCandidate1 || dateCandidate0;
+          nisRaw = cols[2] || '-';
+          namaRaw = cols[3] || '';
+          kelasRaw = cols[4] || '';
+          statusRaw = cols[5] || 'Hadir';
+          if (extractedTime !== '-') jamRaw = extractedTime;
+          ketRaw = cols[6] && !isTimeStr(cols[6]) && !isCoordStr(cols[6]) ? cols[6] : '';
+        }
+
+        // Check if [TERLAMBAT] is anywhere in the row (e.g. Col 6, Col 8, etc.)
+        const fullRowText = cols.join(' ');
+        if (fullRowText.includes('[TERLAMBAT]') && !ketRaw.includes('[TERLAMBAT]')) {
+          ketRaw = ketRaw ? `${ketRaw} [TERLAMBAT]` : '[TERLAMBAT]';
         }
 
         if (namaRaw && kelasRaw) {
           records.push({
-            tanggal: normalizeDateStr(cleanDate),
-            waktu: waktu,
+            tanggal: cleanDate,
+            waktu: jamRaw,
             nis: nisRaw,
             nama: namaRaw,
             kelas: kelasRaw,
@@ -316,7 +397,7 @@ export async function fetchSiswa(kelas: string): Promise<Siswa[]> {
 }
 
 export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: string): Promise<AbsenRecord[]> {
-  let recordsToFilter: AbsenRecord[] = [];
+  let scriptRecords: AbsenRecord[] = [];
   const startNorm = normalizeDateStr(tglMulai);
   const endNorm = normalizeDateStr(tglAkhir);
 
@@ -326,25 +407,47 @@ export async function fetchLaporan(kelas: string, tglMulai: string, tglAkhir: st
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
-        recordsToFilter = data.map((d: any) => ({
-          tanggal: normalizeDateStr(d.tanggal || d.tgl || ''),
-          waktu: d.jam || d.waktu || '-',
-          nis: d.nisn || d.nis || '-',
-          nama: d.nama || '',
-          kelas: d.kelas || '',
-          status: d.status || 'Hadir',
-          ket: d.keterangan || d.ket || '',
-        }));
+        scriptRecords = data.map((d: any) => {
+          const rawTime = d.jam || d.waktu || d.jamInput || '';
+          const validTime = isTimeStr(rawTime) ? rawTime : '-';
+          return {
+            tanggal: normalizeDateStr(d.tanggal || d.tgl || ''),
+            waktu: validTime,
+            nis: d.nisn || d.nis || '-',
+            nama: d.nama || '',
+            kelas: d.kelas || '',
+            status: d.status || 'Hadir',
+            ket: d.keterangan || d.ket || '',
+          };
+        });
       }
     }
   } catch (err) {
-    console.warn('Google Apps Script fetchLaporan failed, falling back to direct sheet:', err);
+    console.warn('Google Apps Script fetchLaporan failed:', err);
   }
 
-  if (recordsToFilter.length === 0) {
-    recordsToFilter = await fetchDirectSpreadsheetData();
-  }
+  // Always fetch direct spreadsheet data to capture real-time entries
+  const directRecords = await fetchDirectSpreadsheetData();
 
+  // Combine and deduplicate records
+  const allRecordsMap = new Map<string, AbsenRecord>();
+
+  const addRec = (rec: AbsenRecord) => {
+    const tgl = normalizeDateStr(rec.tanggal);
+    if (!tgl) return;
+    const nis = rec.nis ? rec.nis.trim().replace(/^0+/, '') : '';
+    const nama = rec.nama ? rec.nama.replace(/\s+/g, ' ').trim().toLowerCase() : '';
+    const st = rec.status ? rec.status.trim().toLowerCase() : '';
+    const key = `${tgl}_${nis}_${nama}_${st}`;
+    if (!allRecordsMap.has(key)) {
+      allRecordsMap.set(key, { ...rec, tanggal: tgl });
+    }
+  };
+
+  scriptRecords.forEach(addRec);
+  directRecords.forEach(addRec);
+
+  const recordsToFilter = Array.from(allRecordsMap.values());
   const targetKelasNorm = kelas ? kelas.replace(/\s+/g, ' ').trim().toLowerCase() : '';
 
   // Filter records strictly by date range and class
@@ -378,37 +481,229 @@ export interface KirimPayload {
   image: string;
 }
 
-export async function postAbsensi(payload: KirimPayload): Promise<{ ok: boolean; message: string }> {
+export interface AttendanceReceipt {
+  idPresensi: string;
+  nama: string;
+  nis: string;
+  kelas: string;
+  tanggalIso: string;
+  tanggalFormatted: string;
+  waktuFormatted: string;
+  status: string;
+  keteranganStatus: string;
+  keteranganNotes: string;
+  fotoBase64: string;
+  lokasiStatus: string;
+  lat: number | null;
+  lng: number | null;
+  createdAt: number;
+}
+
+export interface PostAbsensiResponse {
+  ok: boolean;
+  message: string;
+  errorType?: 'network' | 'validation' | 'database';
+  receipt?: AttendanceReceipt;
+}
+
+export function formatTanggalIndo(dateObj: Date): string {
+  const bulanIndo = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  const d = dateObj.getDate();
+  const m = bulanIndo[dateObj.getMonth()];
+  const y = dateObj.getFullYear();
+  return `${d} ${m} ${y}`;
+}
+
+export function saveLocalReceipt(receipt: AttendanceReceipt) {
   try {
+    const existing = getLocalReceipts();
+    const filtered = existing.filter(
+      (r) => !(r.nis === receipt.nis && r.tanggalIso === receipt.tanggalIso && r.status === receipt.status)
+    );
+    filtered.unshift(receipt);
+    localStorage.setItem('SIMAGU_ATTENDANCE_RECEIPTS', JSON.stringify(filtered.slice(0, 100)));
+  } catch (e) {
+    console.error('Error saving local receipt:', e);
+  }
+}
+
+export function getLocalReceipts(): AttendanceReceipt[] {
+  try {
+    const data = localStorage.getItem('SIMAGU_ATTENDANCE_RECEIPTS');
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function getTodayStudentReceipt(nis: string, nama: string, tanggalIso: string): AttendanceReceipt | null {
+  const receipts = getLocalReceipts();
+  const found = receipts.find(
+    (r) =>
+      r.tanggalIso === tanggalIso &&
+      ((nis && r.nis === nis) || (nama && r.nama.toLowerCase() === nama.toLowerCase()))
+  );
+  return found || null;
+}
+
+export async function postAbsensi(payload: KirimPayload): Promise<PostAbsensiResponse> {
+  // Check online status first
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return {
+      ok: false,
+      errorType: 'network',
+      message: 'Periksa koneksi internet kamu lalu coba kembali.',
+    };
+  }
+
+  try {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const tanggalLocal = `${yyyy}-${mm}-${dd}`;
+
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    const jamLocal = `${hh}.${min}.${ss}`;
+    const waktuWibFormatted = `${hh}:${min} WIB`;
+    const tglIndoFormatted = formatTanggalIndo(now);
+
+    const cleanKet = (payload.keterangan || '').trim();
+
+    // Check lateness
+    let lateStatusStr = 'TEPAT WAKTU';
+    if (payload.status === 'Hadir' && `${hh}:${min}` > BATAS_JAM_MASUK) {
+      lateStatusStr = 'TERLAMBAT';
+    } else if (payload.status === 'Sakit' || payload.status === 'Izin') {
+      lateStatusStr = payload.status.toUpperCase();
+    }
+
+    // Format ID Presensi: PRS-YYYYMMDD-RandomHex or NIS
+    const randSuffix = Math.floor(100000 + Math.random() * 900000);
+    const idPresensi = `PRS-${yyyy}${mm}${dd}-${payload.nis !== '-' ? payload.nis : randSuffix}`;
+
+    // Format location text
+    let lokasiText = 'Tanpa GPS';
+    if (payload.lat !== null && payload.lng !== null) {
+      lokasiText = `Lokasi Terdeteksi (${payload.lat.toFixed(4)}, ${payload.lng.toFixed(4)})`;
+    }
+
     const bodyData = {
       action: 'simpanAbsen',
+      id: idPresensi,
       nis: payload.nis,
       nisn: payload.nis,
       nama: payload.nama,
       kelas: payload.kelas,
       status: payload.status,
-      keterangan: payload.keterangan,
-      lat: payload.lat,
-      lng: payload.lng,
-      fotoBase64: payload.image,
-      image: payload.image,
-      jam: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      tanggal: new Date().toISOString().split('T')[0],
+      keterangan: cleanKet,
+      ket: cleanKet,
+      guru: '',
+      mataPelajaran: '',
+      mapel: '',
+      jam: jamLocal,
+      jamInput: jamLocal,
+      waktu: jamLocal,
+      lat: payload.lat ?? '',
+      latitude: payload.lat ?? '',
+      lng: payload.lng ?? '',
+      longitude: payload.lng ?? '',
+      alamat: '',
+      fotoBase64: payload.image || '',
+      image: payload.image || '',
+      foto: payload.image || '',
+      tanggal: tanggalLocal,
+      tgl: tanggalLocal,
     };
 
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(bodyData),
-    });
+    let serverSuccess = false;
+    let serverMessage = '';
 
-    const data = await res.json();
-    if (data.ok === true || data.status === 'success') {
-      return { ok: true, message: data.message || 'Absensi berhasil disimpan!' };
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(bodyData),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok === true || data.status === 'success' || data.result === 'success') {
+          serverSuccess = true;
+          serverMessage = data.message || 'Presensi kamu telah berhasil dicatat.';
+        } else {
+          serverMessage = data.message || 'Data presensi belum berhasil disimpan. Silakan coba kembali.';
+        }
+      } else {
+        serverMessage = 'Data presensi belum berhasil disimpan. Silakan coba kembali.';
+      }
+    } catch (fetchErr: any) {
+      console.warn('Network / Server fetch error:', fetchErr);
+      if (fetchErr.name === 'AbortError') {
+        return {
+          ok: false,
+          errorType: 'network',
+          message: 'Koneksi ke server lambat atau terputus. Silakan coba kembali.',
+        };
+      }
+      return {
+        ok: false,
+        errorType: 'network',
+        message: 'Periksa koneksi internet kamu lalu coba kembali.',
+      };
     }
-    return { ok: false, message: data.message || 'Gagal menyimpan absensi.' };
+
+    if (!serverSuccess) {
+      return {
+        ok: false,
+        errorType: 'database',
+        message: serverMessage || 'Data presensi belum berhasil disimpan. Silakan coba kembali.',
+      };
+    }
+
+    // Build Receipt Object
+    const receiptObj: AttendanceReceipt = {
+      idPresensi,
+      nama: payload.nama,
+      nis: payload.nis,
+      kelas: payload.kelas,
+      tanggalIso: tanggalLocal,
+      tanggalFormatted: tglIndoFormatted,
+      waktuFormatted: waktuWibFormatted,
+      status: payload.status.toUpperCase(),
+      keteranganStatus: lateStatusStr,
+      keteranganNotes: cleanKet,
+      fotoBase64: payload.image || '',
+      lokasiStatus: lokasiText,
+      lat: payload.lat,
+      lng: payload.lng,
+      createdAt: Date.now(),
+    };
+
+    // Save to local storage cache so student can view receipt & prevent duplicates
+    saveLocalReceipt(receiptObj);
+
+    return {
+      ok: true,
+      message: 'Presensi kamu telah berhasil dicatat.',
+      receipt: receiptObj,
+    };
   } catch (err) {
     console.error('Error posting absensi:', err);
-    return { ok: false, message: 'Gagal Konek Server.' };
+    return {
+      ok: false,
+      errorType: 'database',
+      message: 'Data presensi belum berhasil disimpan. Silakan coba kembali.',
+    };
   }
 }
 

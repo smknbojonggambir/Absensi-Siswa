@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Language, Siswa, AbsenRecord, RekapSiswa, JenisLaporan, TampilanLaporan } from '../types';
-import { fetchKelas, fetchSiswa, fetchLaporan, normalizeDateStr } from '../services/api';
+import { Language, Siswa, AbsenRecord, RekapSiswa, JenisLaporan, TampilanLaporan, StatusAbsen } from '../types';
+import { fetchKelas, fetchSiswa, fetchLaporan, normalizeDateStr, isTimeStr } from '../services/api';
 
 interface LaporanAbsensiProps {
   lang: Language;
@@ -19,7 +19,14 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
   const [selectedSemester, setSelectedSemester] = useState<string>('Ganjil 2026/2027');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const getTodayStr = () => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  const todayStr = getTodayStr();
   const [tglHarian, setTglHarian] = useState<string>(todayStr);
   const [tglMulai, setTglMulai] = useState<string>(todayStr);
   const [tglSelesai, setTglSelesai] = useState<string>(todayStr);
@@ -79,8 +86,8 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
       m = tglHarian;
       s = tglHarian;
     } else if (lapPeriode === 'range') {
-      // Weekly: get full Monday to Sunday range
-      const ref = tglMulai || todayStr;
+      // Weekly: get Monday to Sunday range for current week
+      const ref = todayStr;
       const d = new Date(ref + 'T00:00:00');
       const day = d.getDay();
       const diffToMon = day === 0 ? -6 : 1 - day;
@@ -96,7 +103,7 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
       setTglSelesai(s);
     } else if (lapPeriode === 'bulanan') {
       // Monthly: get 1st of month to last day of month
-      const ref = tglMulai || todayStr;
+      const ref = todayStr;
       const d = new Date(ref + 'T00:00:00');
       const year = d.getFullYear();
       const month = d.getMonth();
@@ -184,7 +191,7 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
         targetSiswa = targetSiswa.filter((st) => st.nama === selectedSiswa);
       }
 
-      // Keep raw records strictly as recorded (do NOT auto-fill missing days as Alpha)
+      // Keep raw records and auto-populate missing NIS
       let finalRecords = [...data];
       if (selectedSiswa) {
         finalRecords = finalRecords.filter((d) => d.nama === selectedSiswa);
@@ -212,15 +219,101 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
         }
       });
 
+      // Build comprehensive normalizedRawRecords for Detail Transaksi table
+      const normalizedRawRecords: AbsenRecord[] = [];
+      const reportDays = days.length > 0 ? days : [m];
+
+      reportDays.forEach((dayStr) => {
+        const normDay = normalizeDateStr(dayStr);
+        const isPastOrToday = normDay <= todayStr;
+        const isSunday = new Date(normDay + 'T00:00:00').getDay() === 0;
+
+        targetSiswa.forEach((st) => {
+          const targetNama = st.nama.replace(/\s+/g, ' ').trim().toLowerCase();
+          const targetNis = st.nis && st.nis !== '-' ? st.nis.trim().replace(/^0+/, '') : null;
+
+          const rec = finalRecords.find((r) => {
+            if (normalizeDateStr(r.tanggal) !== normDay) return false;
+            if (targetNis && r.nis && r.nis !== '-') {
+              if (r.nis.trim().replace(/^0+/, '') === targetNis) return true;
+            }
+            if (r.nama && r.nama.replace(/\s+/g, ' ').trim().toLowerCase() === targetNama) return true;
+            return false;
+          });
+
+          if (rec) {
+            const stClean = (rec.status || '').trim().toLowerCase();
+            let normStatus: StatusAbsen = 'Hadir';
+            if (stClean === 'sakit' || stClean === 's') normStatus = 'Sakit';
+            else if (stClean === 'izin' || stClean === 'i' || stClean === 'dispen' || stClean === 'd') normStatus = 'Izin';
+            else if (stClean === 'alpha' || stClean === 'alpa' || stClean === 'a') normStatus = 'Alpha';
+            else if (stClean === 'pulang') normStatus = 'Pulang';
+
+            let validWaktu = rec.waktu && rec.waktu !== '-' && isTimeStr(rec.waktu) ? rec.waktu : '-';
+
+            normalizedRawRecords.push({
+              ...rec,
+              tanggal: normDay,
+              nis: rec.nis && rec.nis !== '-' ? rec.nis : st.nis,
+              nama: st.nama,
+              kelas: st.kelas,
+              status: normStatus,
+              waktu: validWaktu,
+            });
+          } else if (isPastOrToday && !isSunday) {
+            normalizedRawRecords.push({
+              tanggal: normDay,
+              waktu: '-',
+              nis: st.nis || '-',
+              nama: st.nama,
+              kelas: st.kelas,
+              status: 'Alpha',
+              ket: 'Tanpa Keterangan',
+            });
+          }
+        });
+      });
+
+      // Include extra records for students outside targetSiswa list
+      finalRecords.forEach((rec) => {
+        const normDay = normalizeDateStr(rec.tanggal);
+        const targetNama = rec.nama ? rec.nama.replace(/\s+/g, ' ').trim().toLowerCase() : '';
+        const targetNis = rec.nis && rec.nis !== '-' ? rec.nis.trim().replace(/^0+/, '') : null;
+
+        const existsInTarget = targetSiswa.some((s) => {
+          if (targetNis && s.nis && s.nis !== '-' && s.nis.trim().replace(/^0+/, '') === targetNis) return true;
+          if (targetNama && s.nama.replace(/\s+/g, ' ').trim().toLowerCase() === targetNama) return true;
+          return false;
+        });
+
+        if (!existsInTarget) {
+          const stClean = (rec.status || '').trim().toLowerCase();
+          let normStatus: StatusAbsen = 'Hadir';
+          if (stClean === 'sakit' || stClean === 's') normStatus = 'Sakit';
+          else if (stClean === 'izin' || stClean === 'i' || stClean === 'dispen' || stClean === 'd') normStatus = 'Izin';
+          else if (stClean === 'alpha' || stClean === 'alpa' || stClean === 'a') normStatus = 'Alpha';
+          else if (stClean === 'pulang') normStatus = 'Pulang';
+
+          let validWaktu = rec.waktu && rec.waktu !== '-' && isTimeStr(rec.waktu) ? rec.waktu : '-';
+
+          normalizedRawRecords.push({
+            ...rec,
+            tanggal: normDay,
+            status: normStatus,
+            waktu: validWaktu,
+          });
+        }
+      });
+
       // Sort records
-      finalRecords.sort((a, b) => {
+      normalizedRawRecords.sort((a, b) => {
         if (a.tanggal === b.tanggal) {
           return a.nama.trim().toLowerCase().localeCompare(b.nama.trim().toLowerCase());
         }
         return a.tanggal.localeCompare(b.tanggal);
       });
 
-      setRawRecords(finalRecords);
+      setRawRecords(normalizedRawRecords);
 
       // Build Rekap Per Siswa matrix
       const totalHariEfektif = days.length || 1;
@@ -242,6 +335,7 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
         });
       });
 
+      // Populate NIS for any students in records not in targetSiswa map
       finalRecords.forEach((rec) => {
         const key = rec.nama.trim().toLowerCase();
         let item = rekapMap.get(key);
@@ -263,28 +357,54 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
         } else if ((!item.nis || item.nis === '-') && rec.nis && rec.nis !== '-') {
           item.nis = rec.nis;
         }
-
-        const st = (rec.status || '').trim().toLowerCase();
-        if (st === 'hadir' || st === 'h' || st === 'masuk' || st === 'pagi') item.hadir++;
-        else if (st === 'pulang') item.pulang++;
-        else if (st === 'sakit' || st === 's') item.sakit++;
-        else if (st === 'izin' || st === 'i' || st === 'dispen' || st === 'd') item.izin++;
-        else if (st === 'alpha' || st === 'alpa' || st === 'a') item.alpha++;
-        else if (st === 'terlambat' || st === 't') {
-          item.hadir++;
-          item.terlambat++;
-        } else {
-          item.hadir++;
-        }
-        if (rec.ket && rec.ket.includes('[TERLAMBAT]') && st !== 'terlambat' && st !== 't') {
-          item.terlambat++;
-        }
       });
 
       const rekapList: RekapSiswa[] = Array.from(rekapMap.values()).map((item) => {
-        const pct = totalHariEfektif > 0 ? (item.hadir / totalHariEfektif) * 100 : 0;
+        let h = 0, s = 0, i = 0, a = 0, t = 0;
+
+        days.forEach((dayStr) => {
+          const targetDate = normalizeDateStr(dayStr);
+          const targetNama = (item.nama || '').replace(/\s+/g, ' ').trim().toLowerCase();
+          const targetNis = item.nis && item.nis !== '-' ? item.nis.trim().replace(/^0+/, '') : null;
+
+          const rec = finalRecords.find((r) => {
+            if (normalizeDateStr(r.tanggal) !== targetDate) return false;
+            if ((r.status || '').trim().toLowerCase() === 'pulang') return false;
+            if (targetNis && r.nis && r.nis !== '-') {
+              if (r.nis.trim().replace(/^0+/, '') === targetNis) return true;
+            }
+            if (r.nama && r.nama.replace(/\s+/g, ' ').trim().toLowerCase() === targetNama) return true;
+            return false;
+          });
+
+          if (!rec) {
+            if (dayStr <= todayStr) {
+              const dt = new Date(dayStr + 'T00:00:00');
+              if (dt.getDay() !== 0) {
+                a++;
+              }
+            }
+          } else {
+            const st = (rec.status || '').trim().toLowerCase();
+            if (st === 'sakit' || st === 's') s++;
+            else if (st === 'izin' || st === 'i' || st === 'dispen' || st === 'd') i++;
+            else if (st === 'alpha' || st === 'alpa' || st === 'a') a++;
+            else h++;
+
+            if (st === 'terlambat' || st === 't' || (rec.ket && rec.ket.includes('[TERLAMBAT]'))) {
+              t++;
+            }
+          }
+        });
+
+        const pct = totalHariEfektif > 0 ? (h / totalHariEfektif) * 100 : 0;
         return {
           ...item,
+          hadir: h,
+          sakit: s,
+          izin: i,
+          alpha: a,
+          terlambat: t,
           persentase: Math.min(100, parseFloat(pct.toFixed(1))),
         };
       });
@@ -390,15 +510,22 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
       return false;
     });
 
-    if (!rec) return '-';
+    if (!rec) {
+      if (dateStr <= todayStr) {
+        const dt = new Date(dateStr + 'T00:00:00');
+        if (dt.getDay() !== 0) {
+          return 'A';
+        }
+      }
+      return '-';
+    }
     const st = (rec.status || '').trim().toLowerCase();
-    if (st === 'hadir' || st === 'h' || st === 'masuk' || st === 'pagi') return 'H';
     if (st === 'sakit' || st === 's') return 'S';
     if (st === 'izin' || st === 'i' || st === 'dispen' || st === 'd') return 'I';
     if (st === 'alpha' || st === 'alpa' || st === 'a') return 'A';
-    if (st === 'terlambat' || st === 't') return 'H';
+    if (st === 'hadir' || st === 'h' || st === 'masuk' || st === 'pagi' || st === 'terlambat' || st === 't') return 'H';
     if (rec.ket && rec.ket.includes('[TERLAMBAT]')) return 'H';
-    return '-';
+    return 'H';
   };
 
   const getAutoFilename = (ext: 'csv' | 'pdf') => {
@@ -942,15 +1069,24 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
                 }
 
                 const now = new Date();
+                const formatD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+
                 if (val === 'range') {
-                  const dStart = new Date(now);
-                  dStart.setDate(now.getDate() - 6);
-                  setTglMulai(dStart.toISOString().split('T')[0]);
-                  setTglSelesai(now.toISOString().split('T')[0]);
+                  const day = now.getDay();
+                  const diffToMon = day === 0 ? -6 : 1 - day;
+                  const monday = new Date(now);
+                  monday.setDate(now.getDate() + diffToMon);
+                  const sunday = new Date(monday);
+                  sunday.setDate(monday.getDate() + 6);
+
+                  setTglMulai(formatD(monday));
+                  setTglSelesai(formatD(sunday));
                 } else if (val === 'bulanan') {
                   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-                  setTglMulai(firstDay.toISOString().split('T')[0]);
-                  setTglSelesai(now.toISOString().split('T')[0]);
+                  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                  setTglMulai(formatD(firstDay));
+                  setTglSelesai(formatD(lastDay));
                 }
               }}
             >
@@ -1638,11 +1774,23 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
                     </tr>
                   ) : (
                     filteredRawList.map((d, i) => {
+                      const stClean = (d.status || '').trim().toLowerCase();
+                      let displayStatus = 'Hadir';
                       let badgeColor = 'bg-Hadir';
-                      if (d.status === 'Pulang') badgeColor = 'bg-Pulang';
-                      if (d.status === 'Sakit') badgeColor = 'bg-Sakit';
-                      if (d.status === 'Izin') badgeColor = 'bg-Izin';
-                      if (d.status === 'Alpha') badgeColor = 'bg-Alpha';
+
+                      if (stClean === 'sakit' || stClean === 's') {
+                        displayStatus = 'Sakit';
+                        badgeColor = 'bg-Sakit';
+                      } else if (stClean === 'izin' || stClean === 'i' || stClean === 'dispen' || stClean === 'd') {
+                        displayStatus = 'Izin';
+                        badgeColor = 'bg-Izin';
+                      } else if (stClean === 'alpha' || stClean === 'alpa' || stClean === 'a') {
+                        displayStatus = 'Alpha';
+                        badgeColor = 'bg-Alpha';
+                      } else if (stClean === 'pulang') {
+                        displayStatus = 'Pulang';
+                        badgeColor = 'bg-Pulang';
+                      }
 
                       const isLate = d.ket && d.ket.includes('[TERLAMBAT]');
                       const cleanKet = d.ket ? d.ket.replace('[TERLAMBAT]', '').trim() : '';
@@ -1652,11 +1800,11 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
                           <td style={{ textAlign: 'center' }}>{i + 1}</td>
                           <td style={{ textAlign: 'center' }}>{d.nis || '-'}</td>
                           <td>{d.tanggal}</td>
-                          <td>{d.waktu}</td>
+                          <td>{d.waktu || '-'}</td>
                           <td style={{ fontWeight: 600 }}>{d.nama}</td>
                           <td>{d.kelas}</td>
                           <td>
-                            <span className={`badge ${badgeColor}`}>{d.status}</span>
+                            <span className={`badge ${badgeColor}`}>{displayStatus}</span>
                           </td>
                           <td style={{ fontSize: '11px' }}>
                             {isLate && (
@@ -1672,12 +1820,12 @@ export const LaporanAbsensi: React.FC<LaporanAbsensiProps> = ({ lang }) => {
                           <td style={{ textAlign: 'center' }}>{i + 1}</td>
                           <td style={{ textAlign: 'center' }}>{d.nis || '-'}</td>
                           <td>
-                            {d.tanggal} <small style={{ color: '#64748b' }}>({d.waktu})</small>
+                            {d.tanggal} <small style={{ color: '#64748b' }}>({d.waktu || '-'})</small>
                           </td>
                           <td style={{ fontWeight: 600 }}>{d.nama}</td>
                           <td>{d.kelas}</td>
                           <td>
-                            <span className={`badge ${badgeColor}`}>{d.status}</span>
+                            <span className={`badge ${badgeColor}`}>{displayStatus}</span>
                           </td>
                           <td style={{ fontSize: '11px' }}>
                             {isLate && (

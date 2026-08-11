@@ -43,6 +43,9 @@ export const Header: React.FC<HeaderProps> = ({ lang, onToggleLang }) => {
             src="/logo.png"
             alt="Logo SMKN Bojonggambir"
             className="logo-img"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://raw.githubusercontent.com/smknbojonggambir/Absensi-Siswa/main/public/logo.png';
+            }}
           />
           <div>
             <h1 className="school-title">
