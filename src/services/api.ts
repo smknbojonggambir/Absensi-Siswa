@@ -1,6 +1,6 @@
 import { AbsenRecord, Siswa, StatusAbsen } from '../types';
 
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxc77xA8sZbYLpc8_IMJDiA3rh1RoseOlhseyh2GS-neWLXAW2gkOC5ajGja68N66YHxw/exec';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwk8D5aCBZ2ZaHkqc9u2TKu5GaeRO9qJJ9yXPF020qEFpA5U0jpvFPUF09c4KeYfMFJMA/exec';
 export const SPREADSHEET_ID = '1_Zts99iIgy3L7TKCtADv25P6pTeGLmD3rvRWQ7RMWIA';
 export const SPREADSHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 export const SPREADSHEET_SISWA_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=DataSiswa`;
